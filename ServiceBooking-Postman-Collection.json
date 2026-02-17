@@ -1,0 +1,2256 @@
+{
+	"info": {
+		"_postman_id": "servicebooking-collection-v1",
+		"name": "ServiceBooking Platform - Complete API Collection",
+		"description": "Complete sequential API collection for the ServiceBooking platform.\n\nRun order:\n1. Auth - Register & Login users\n2. Service Catalog - Create categories & sub-services\n3. Customer Profile - Manage addresses\n4. Provider Management - Setup, approval, availability\n5. Bookings - Create, slot booking, accept, complete\n6. Payments - Record & confirm\n7. Ratings & Reviews\n8. Notifications\n9. Admin Management\n10. Analytics\n\nVariables:\n- {{base_url}} = http://localhost:8080\n- {{customer_token}} = JWT after customer login\n- {{provider_token}} = JWT after provider login\n- {{admin_token}} = JWT after admin login",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "provider_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sub_service_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "booking_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "provider_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "address_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "01 - Authentication",
+			"description": "User registration, OTP verification, password setup, and login",
+			"item": [
+				{
+					"name": "01.1 Register Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Customer registration successful', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Customer\",\n    \"email\": \"customer@example.com\",\n    \"role\": \"CUSTOMER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new customer. An OTP will be sent to the email."
+					}
+				},
+				{
+					"name": "01.2 Register Provider",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Provider registration successful', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Provider\",\n    \"email\": \"provider@example.com\",\n    \"role\": \"PROVIDER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new service provider. An OTP will be sent to the email."
+					}
+				},
+				{
+					"name": "01.3 Register Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Admin registration successful', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register an admin user. An OTP will be sent to the email."
+					}
+				},
+				{
+					"name": "01.4 Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "send-otp"]
+						},
+						"description": "Resend OTP to a registered email address."
+					}
+				},
+				{
+					"name": "01.5 Verify OTP - Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@example.com\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Verify the OTP received via email. Replace '123456' with the actual OTP. Account status changes to ACTIVE."
+					}
+				},
+				{
+					"name": "01.6 Verify OTP - Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"provider@example.com\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Verify provider OTP. Replace '123456' with actual OTP."
+					}
+				},
+				{
+					"name": "01.7 Verify OTP - Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Verify admin OTP. Replace '123456' with actual OTP."
+					}
+				},
+				{
+					"name": "01.8 Set Password - Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@example.com\",\n    \"password\": \"Customer@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/set-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "set-password"]
+						},
+						"description": "Set password for the customer account after OTP verification."
+					}
+				},
+				{
+					"name": "01.9 Set Password - Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"provider@example.com\",\n    \"password\": \"Provider@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/set-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "set-password"]
+						},
+						"description": "Set password for the provider account after OTP verification."
+					}
+				},
+				{
+					"name": "01.10 Set Password - Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"Admin@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/set-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "set-password"]
+						},
+						"description": "Set password for the admin account after OTP verification."
+					}
+				},
+				{
+					"name": "01.11 Login - Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('customer_token', jsonData.token);",
+									"}",
+									"pm.test('Customer login successful', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    pm.expect(jsonData.token).to.not.be.empty;",
+									"    pm.expect(jsonData.role).to.equal('CUSTOMER');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@example.com\",\n    \"password\": \"Customer@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as customer. Token is auto-saved to {{customer_token}} variable."
+					}
+				},
+				{
+					"name": "01.12 Login - Provider",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('provider_token', jsonData.token);",
+									"}",
+									"pm.test('Provider login successful', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    pm.expect(jsonData.token).to.not.be.empty;",
+									"    pm.expect(jsonData.role).to.equal('PROVIDER');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"provider@example.com\",\n    \"password\": \"Provider@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as provider. Token is auto-saved to {{provider_token}} variable."
+					}
+				},
+				{
+					"name": "01.13 Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('admin_token', jsonData.token);",
+									"}",
+									"pm.test('Admin login successful', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    pm.expect(jsonData.token).to.not.be.empty;",
+									"    pm.expect(jsonData.role).to.equal('ADMIN');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"Admin@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as admin. Token is auto-saved to {{admin_token}} variable."
+					}
+				}
+			]
+		},
+		{
+			"name": "02 - User Management",
+			"description": "Get and update user profiles",
+			"item": [
+				{
+					"name": "02.1 Get Current User (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.id) {",
+									"    pm.collectionVariables.set('customer_id', jsonData.id);",
+									"}",
+									"pm.test('Get current customer user', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Get the currently logged-in customer's profile. Auto-saves customer_id."
+					}
+				},
+				{
+					"name": "02.2 Get Current User (Provider)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.id) {",
+									"    pm.collectionVariables.set('provider_id', jsonData.id);",
+									"}",
+									"pm.test('Get current provider user', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Get the currently logged-in provider's profile. Auto-saves provider_id."
+					}
+				},
+				{
+					"name": "02.3 Update Current User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Customer Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Update the current user's name."
+					}
+				},
+				{
+					"name": "02.4 Get User by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{customer_id}}"]
+						},
+						"description": "Admin-only: Get any user's profile by ID."
+					}
+				}
+			]
+		},
+		{
+			"name": "03 - Service Catalog",
+			"description": "Manage service categories and sub-services (Admin creates, public can view)",
+			"item": [
+				{
+					"name": "03.1 Create Service Category (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Category created', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Home Cleaning\",\n    \"description\": \"Professional home cleaning services including deep cleaning, regular cleaning, and specialized cleaning.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/categories",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "categories"]
+						},
+						"description": "Admin creates a new service category."
+					}
+				},
+				{
+					"name": "03.2 Create Another Category (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Plumbing\",\n    \"description\": \"All plumbing services including pipe repair, fixture installation, and drain cleaning.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/categories",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "categories"]
+						},
+						"description": "Admin creates another service category."
+					}
+				},
+				{
+					"name": "03.3 List All Categories (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.length > 0 && jsonData[0].id) {",
+									"    pm.collectionVariables.set('category_id', jsonData[0].id);",
+									"}",
+									"pm.test('Categories listed', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalog/categories",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "categories"]
+						},
+						"description": "Public: List all service categories. Auto-saves first category_id."
+					}
+				},
+				{
+					"name": "03.4 Update Category (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Home Cleaning Services\",\n    \"description\": \"Updated: Professional home cleaning services.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/categories/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "categories", "{{category_id}}"]
+						},
+						"description": "Admin updates an existing service category."
+					}
+				},
+				{
+					"name": "03.5 Add Sub-Service to Category (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Sub-service created', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Deep Cleaning\",\n    \"description\": \"Thorough deep cleaning of entire home including kitchen, bathrooms, and living areas.\",\n    \"basePrice\": 2500.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/services/category/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "category", "{{category_id}}"]
+						},
+						"description": "Admin adds a sub-service under a category."
+					}
+				},
+				{
+					"name": "03.6 Add Another Sub-Service (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Regular Cleaning\",\n    \"description\": \"Standard cleaning service for homes and apartments.\",\n    \"basePrice\": 1500.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/services/category/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "category", "{{category_id}}"]
+						},
+						"description": "Admin adds another sub-service under the same category."
+					}
+				},
+				{
+					"name": "03.7 Get Sub-Services by Category (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.length > 0 && jsonData[0].id) {",
+									"    pm.collectionVariables.set('sub_service_id', jsonData[0].id);",
+									"}",
+									"pm.test('Sub-services listed', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalog/services/category/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "category", "{{category_id}}"]
+						},
+						"description": "Public: List all sub-services in a category. Auto-saves first sub_service_id."
+					}
+				},
+				{
+					"name": "03.8 Update Sub-Service (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Premium Deep Cleaning\",\n    \"description\": \"Updated: Premium deep cleaning service.\",\n    \"basePrice\": 3000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/catalog/services/{{sub_service_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "{{sub_service_id}}"]
+						},
+						"description": "Admin updates an existing sub-service."
+					}
+				},
+				{
+					"name": "03.9 Search Sub-Services (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/catalog/services/search?q=cleaning",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "cleaning"
+								}
+							]
+						},
+						"description": "Public: Search sub-services by name or description keyword."
+					}
+				}
+			]
+		},
+		{
+			"name": "04 - Customer Profile & Addresses",
+			"description": "Manage customer profile and delivery addresses",
+			"item": [
+				{
+					"name": "04.1 Get Customer Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/customer/profile",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "profile"]
+						},
+						"description": "Get customer profile with addresses. Auto-creates profile if not exists."
+					}
+				},
+				{
+					"name": "04.2 Update Customer Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Customer Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/profile",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "profile"]
+						},
+						"description": "Update customer profile name."
+					}
+				},
+				{
+					"name": "04.3 Add Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Address added', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"addressLine\": \"123, MG Road, Sector 5\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560001\",\n    \"isDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/address",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "address"]
+						},
+						"description": "Add a new address for the customer. If isDefault=true, other addresses are unset as default."
+					}
+				},
+				{
+					"name": "04.4 Add Second Address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"addressLine\": \"456, Ring Road, Phase 2\",\n    \"city\": \"Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\",\n    \"isDefault\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/address",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "address"]
+						},
+						"description": "Add a second address."
+					}
+				},
+				{
+					"name": "04.5 Get Profile with Addresses",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.addresses && jsonData.addresses.length > 0) {",
+									"    pm.collectionVariables.set('address_id', jsonData.addresses[0].id);",
+									"}",
+									"pm.test('Profile has addresses', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/customer/profile",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "profile"]
+						},
+						"description": "Get profile again to see addresses and capture address_id."
+					}
+				},
+				{
+					"name": "04.6 Update Address",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"addressLine\": \"123, Updated MG Road, Sector 5\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560002\",\n    \"isDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/address/{{address_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "address", "{{address_id}}"]
+						},
+						"description": "Update an existing address."
+					}
+				}
+			]
+		},
+		{
+			"name": "05 - Provider Management",
+			"description": "Provider setup, document upload, approval, availability, and job management",
+			"item": [
+				{
+					"name": "05.1 Provider Setup (Link Services)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subServiceIds\": [{{sub_service_id}}]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/setup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "setup"]
+						},
+						"description": "Provider initial setup: link to sub-services they can perform. Creates ProviderProfile (not approved)."
+					}
+				},
+				{
+					"name": "05.2 Upload Provider Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"documentType\": \"AADHAR\",\n    \"documentUrl\": \"https://example.com/documents/aadhar-card.pdf\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/documents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "documents"]
+						},
+						"description": "Upload verification document (AADHAR, PAN, or LICENSE). Notifies all admins."
+					}
+				},
+				{
+					"name": "05.3 Upload Another Document (PAN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"documentType\": \"PAN\",\n    \"documentUrl\": \"https://example.com/documents/pan-card.pdf\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/documents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "documents"]
+						},
+						"description": "Upload PAN card document."
+					}
+				},
+				{
+					"name": "05.4 Admin Approves Provider",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/provider/{{provider_id}}/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "{{provider_id}}", "approve"]
+						},
+						"description": "Admin approves a provider's profile. Provider can now go online and accept jobs."
+					}
+				},
+				{
+					"name": "05.5 Provider Goes Online",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"online\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/availability",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "availability"]
+						},
+						"description": "Toggle provider online status. Must be approved first."
+					}
+				},
+				{
+					"name": "05.6 Set Availability Window",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2026-02-20\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"17:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/availability/window",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "availability", "window"]
+						},
+						"description": "Create hourly availability slots for a specific date (e.g., 09:00-17:00 creates 8 one-hour slots)."
+					}
+				},
+				{
+					"name": "05.7 View Available Jobs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/provider/jobs",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "jobs"]
+						},
+						"description": "View available PENDING jobs. Provider must be approved and online."
+					}
+				},
+				{
+					"name": "05.8 Accept a Job",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/provider/jobs/{{booking_id}}/accept",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "jobs", "{{booking_id}}", "accept"]
+						},
+						"description": "Accept a pending job. Booking status: PENDING -> ACCEPTED."
+					}
+				},
+				{
+					"name": "05.9 Complete a Job",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/provider/jobs/{{booking_id}}/status?status=COMPLETED",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "jobs", "{{booking_id}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "COMPLETED"
+								}
+							]
+						},
+						"description": "Mark a job as completed. Booking status: ACCEPTED -> COMPLETED."
+					}
+				},
+				{
+					"name": "05.10 Get Provider Earnings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/provider/earnings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "earnings"]
+						},
+						"description": "Get total earnings from completed bookings."
+					}
+				},
+				{
+					"name": "05.11 Provider Goes Offline",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"online\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/availability",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "availability"]
+						},
+						"description": "Toggle provider offline."
+					}
+				}
+			]
+		},
+		{
+			"name": "06 - Bookings",
+			"description": "Create bookings, view slots, book slots, view history",
+			"item": [
+				{
+					"name": "06.1 Create Booking (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Booking created', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": {{sub_service_id}},\n    \"dateTime\": \"2026-02-20T10:00:00\",\n    \"location\": \"123, MG Road, Bangalore\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/bookings",
+							"host": ["{{base_url}}"],
+							"path": ["bookings"]
+						},
+						"description": "Customer creates a new booking. Status starts as PENDING. Price is captured from sub-service base price."
+					}
+				},
+				{
+					"name": "06.2 Get Customer Bookings",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.length > 0 && jsonData[0].bookingId) {",
+									"    pm.collectionVariables.set('booking_id', jsonData[0].bookingId);",
+									"}",
+									"pm.test('Customer bookings listed', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/bookings/customer",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "customer"]
+						},
+						"description": "Get all bookings for the logged-in customer. Auto-saves booking_id."
+					}
+				},
+				{
+					"name": "06.3 Get Available Slots",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/bookings/slots?serviceId={{sub_service_id}}&date=2026-02-20",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "slots"],
+							"query": [
+								{
+									"key": "serviceId",
+									"value": "{{sub_service_id}}"
+								},
+								{
+									"key": "date",
+									"value": "2026-02-20"
+								}
+							]
+						},
+						"description": "Get available time slots for a specific service on a given date."
+					}
+				},
+				{
+					"name": "06.4 Book a Specific Slot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": {{sub_service_id}},\n    \"dateTime\": \"2026-02-20T11:00:00\",\n    \"location\": \"456, Ring Road, Delhi\",\n    \"providerId\": {{provider_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/bookings/slot",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "slot"]
+						},
+						"description": "Book a specific slot with a provider. providerId is optional (auto-assigned if not provided). Slot is locked atomically."
+					}
+				},
+				{
+					"name": "06.5 Get Provider Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/bookings/provider",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "provider"]
+						},
+						"description": "Get all bookings assigned to the logged-in provider."
+					}
+				},
+				{
+					"name": "06.6 Get Booking History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/bookings/history",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "history"]
+						},
+						"description": "Get booking history sorted by creation date (newest first)."
+					}
+				},
+				{
+					"name": "06.7 Cancel Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/bookings/{{booking_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["bookings", "{{booking_id}}", "cancel"]
+						},
+						"description": "Cancel a booking. Customer or provider who owns the booking can cancel."
+					}
+				}
+			]
+		},
+		{
+			"name": "07 - Payments",
+			"description": "Record and manage cash payments with 20% platform commission",
+			"item": [
+				{
+					"name": "07.1 Record Cash Payment (Provider)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.paymentId) {",
+									"    pm.collectionVariables.set('payment_id', jsonData.paymentId);",
+									"}",
+									"pm.test('Payment recorded', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": {{booking_id}},\n    \"amount\": 2500.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payments/cash",
+							"host": ["{{base_url}}"],
+							"path": ["payments", "cash"]
+						},
+						"description": "Provider records cash payment for a booking. Status: RECORDED. One payment per booking."
+					}
+				},
+				{
+					"name": "07.2 Mark Payment as Paid (Provider)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payments/{{payment_id}}/paid",
+							"host": ["{{base_url}}"],
+							"path": ["payments", "{{payment_id}}", "paid"]
+						},
+						"description": "Confirm payment as PAID. Only after booking is COMPLETED. Commission (20%) is calculated."
+					}
+				},
+				{
+					"name": "07.3 Payment History (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payments/history?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["payments", "history"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views paginated payment history with commission breakdown."
+					}
+				}
+			]
+		},
+		{
+			"name": "08 - Ratings & Reviews",
+			"description": "Submit ratings (1-5 stars) and text reviews for completed bookings",
+			"item": [
+				{
+					"name": "08.1 Submit Rating (Customer)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": {{booking_id}},\n    \"stars\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ratings/submit-rating",
+							"host": ["{{base_url}}"],
+							"path": ["ratings", "submit-rating"]
+						},
+						"description": "Customer submits a star rating (1-5) for a COMPLETED booking. One rating per booking."
+					}
+				},
+				{
+					"name": "08.2 Submit Review (Customer)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": {{booking_id}},\n    \"comment\": \"Excellent deep cleaning service! The provider was thorough and professional. Highly recommended.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/ratings/submit-review",
+							"host": ["{{base_url}}"],
+							"path": ["ratings", "submit-review"]
+						},
+						"description": "Customer submits a text review for a COMPLETED booking. Can be combined with or separate from rating."
+					}
+				},
+				{
+					"name": "08.3 Get Provider Ratings (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ratings/provider/{{provider_id}}?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["ratings", "provider", "{{provider_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Public: View paginated ratings and reviews for a specific provider."
+					}
+				},
+				{
+					"name": "08.4 Get Provider Rating Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/ratings/provider/{{provider_id}}/summary",
+							"host": ["{{base_url}}"],
+							"path": ["ratings", "provider", "{{provider_id}}", "summary"]
+						},
+						"description": "Get average rating and total review count for a provider."
+					}
+				},
+				{
+					"name": "08.5 Get Service Reviews (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ratings/service/{{sub_service_id}}?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["ratings", "service", "{{sub_service_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Public: View paginated reviews for a specific sub-service."
+					}
+				}
+			]
+		},
+		{
+			"name": "09 - Notifications",
+			"description": "View and manage user notifications",
+			"item": [
+				{
+					"name": "09.1 Get Notifications (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.content && jsonData.content.length > 0) {",
+									"    pm.collectionVariables.set('notification_id', jsonData.content[0].id);",
+									"}",
+									"pm.test('Notifications retrieved', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated notifications for the logged-in user. Auto-saves first notification_id."
+					}
+				},
+				{
+					"name": "09.2 Get Notifications (Provider)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated notifications for the provider."
+					}
+				},
+				{
+					"name": "09.3 Mark Notification as Read",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications/{{notification_id}}/read",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "{{notification_id}}", "read"]
+						},
+						"description": "Mark a specific notification as read."
+					}
+				}
+			]
+		},
+		{
+			"name": "10 - Admin Management",
+			"description": "Admin dashboard, user management, reports, and provider approvals",
+			"item": [
+				{
+					"name": "10.1 Admin Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "dashboard"]
+						},
+						"description": "Admin dashboard with key metrics: total users, customers, providers, bookings, revenue, commission."
+					}
+				},
+				{
+					"name": "10.2 List All Customers (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/users/customers?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "users", "customers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views paginated list of all customers."
+					}
+				},
+				{
+					"name": "10.3 Suspend User Account (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"suspended\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/users/{{customer_id}}/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "users", "{{customer_id}}", "suspend"]
+						},
+						"description": "Admin suspends a user account. Status: ACTIVE -> SUSPENDED."
+					}
+				},
+				{
+					"name": "10.4 Unsuspend User Account (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"suspended\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/users/{{customer_id}}/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "users", "{{customer_id}}", "suspend"]
+						},
+						"description": "Admin unsuspends a user account. Status: SUSPENDED -> ACTIVE."
+					}
+				},
+				{
+					"name": "10.5 Approve Provider (Admin - alternate)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/providers/{{provider_id}}/approve?approved=true",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "providers", "{{provider_id}}", "approve"],
+							"query": [
+								{
+									"key": "approved",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Admin approves/rejects provider via admin endpoint."
+					}
+				},
+				{
+					"name": "10.6 Update Sub-Service Price (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price\": 2800.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/subservices/{{sub_service_id}}/price",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "subservices", "{{sub_service_id}}", "price"]
+						},
+						"description": "Admin updates the base price of a sub-service."
+					}
+				},
+				{
+					"name": "10.7 View All Bookings (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/bookings?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "bookings"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views paginated list of all bookings in the system."
+					}
+				},
+				{
+					"name": "10.8 Manually Assign Provider to Booking (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"providerId\": {{provider_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/bookings/{{booking_id}}/assign",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "bookings", "{{booking_id}}", "assign"]
+						},
+						"description": "Admin manually assigns a provider to a PENDING booking. Status: PENDING -> ACCEPTED."
+					}
+				},
+				{
+					"name": "10.9 Booking Report (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/reports/bookings?from=2026-01-01T00:00:00&to=2026-12-31T23:59:59",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "reports", "bookings"],
+							"query": [
+								{
+									"key": "from",
+									"value": "2026-01-01T00:00:00"
+								},
+								{
+									"key": "to",
+									"value": "2026-12-31T23:59:59"
+								}
+							]
+						},
+						"description": "Admin gets booking report for a date range: total, completed, cancelled counts."
+					}
+				},
+				{
+					"name": "10.10 Provider Performance Report (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/reports/providers?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "reports", "providers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views provider performance: completed jobs, revenue, commission, net earnings."
+					}
+				},
+				{
+					"name": "10.11 Reject Provider (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\"Documents are not clear, please re-upload.\""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/provider/{{provider_id}}/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "provider", "{{provider_id}}", "reject"]
+						},
+						"description": "Admin rejects a provider with a reason. Provider receives notification."
+					}
+				}
+			]
+		},
+		{
+			"name": "11 - Analytics",
+			"description": "Analytics and reporting endpoints for admin",
+			"item": [
+				{
+					"name": "11.1 Monthly Booking Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/bookings/monthly?year=2026&month=2",
+							"host": ["{{base_url}}"],
+							"path": ["analytics", "bookings", "monthly"],
+							"query": [
+								{
+									"key": "year",
+									"value": "2026"
+								},
+								{
+									"key": "month",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Admin views monthly booking statistics: total, completed, cancelled for a given month."
+					}
+				},
+				{
+					"name": "11.2 Revenue Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/revenue",
+							"host": ["{{base_url}}"],
+							"path": ["analytics", "revenue"]
+						},
+						"description": "Admin views overall revenue summary: gross revenue, platform commission (20%), provider net."
+					}
+				},
+				{
+					"name": "11.3 Provider Activity Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/providers?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["analytics", "providers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views provider activity: completed bookings count per provider."
+					}
+				},
+				{
+					"name": "11.4 Customer Trends",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/customers?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["analytics", "customers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Admin views customer usage trends: total bookings per customer."
+					}
+				}
+			]
+		},
+		{
+			"name": "12 - Cleanup & Misc",
+			"description": "Delete operations and miscellaneous endpoints",
+			"item": [
+				{
+					"name": "12.1 Delete Address",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/customer/address/{{address_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["customer", "address", "{{address_id}}"]
+						},
+						"description": "Delete a customer address by ID."
+					}
+				},
+				{
+					"name": "12.2 Delete Category (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/catalog/categories/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "categories", "{{category_id}}"]
+						},
+						"description": "Admin deletes a service category."
+					}
+				},
+				{
+					"name": "12.3 Delete Sub-Service (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/catalog/services/{{sub_service_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["catalog", "services", "{{sub_service_id}}"]
+						},
+						"description": "Admin deletes a sub-service."
+					}
+				},
+				{
+					"name": "12.4 Delete User Account (Soft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Soft-delete current user account. Status changes to DELETED."
+					}
+				}
+			]
+		}
+	]
+}
