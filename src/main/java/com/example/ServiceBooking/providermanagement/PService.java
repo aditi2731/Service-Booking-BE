@@ -22,10 +22,12 @@ import com.example.ServiceBooking.servicecatalog.SubService;
 import com.example.ServiceBooking.servicecatalog.SubServiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -247,7 +249,82 @@ public class PService {
         return jobs;
     }
 
-    // Accept the booking
+//    // Accept the booking
+//    @Transactional
+//    public void acceptJob(Long providerId, Long bookingId) {
+//        log.trace("Entering acceptJob method");
+//        log.debug("Processing job acceptance");
+//        log.info("Provider accepting job");
+//
+//        ProviderProfile profile = profileRepo.findById(providerId)
+//                .orElseThrow(() -> {
+//                    log.error("Provider not found");
+//                    return new RuntimeException("Provider not found");
+//                });
+//
+//        if (!profile.isApproved() || !profile.isOnline()) {
+//            log.error("Provider not available");
+//            throw new RuntimeException("Provider not available");
+//        }
+//
+//        if (profile.getCity() == null || profile.getCity().isBlank()) {
+//            throw new RuntimeException("Provider city not set");
+//        }
+//
+//        Booking booking = bookingRepo.findById(bookingId)
+//                .orElseThrow(() -> {
+//                    log.error("Booking not found");
+//                    return new RuntimeException("Booking not found");
+//                });
+//
+//        if (booking.getCity() != null && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
+//            throw new RuntimeException("Booking is in a different city");
+//        }
+//
+//        int updatedRows = bookingRepo.assignIfPending(
+//                bookingId,
+//                providerId,
+//                BookingStatus.PENDING,
+//                BookingStatus.ACCEPTED
+//        );
+//
+//        if (updatedRows == 0) {
+//            log.warn("Booking already accepted by another provider");
+//            throw new RuntimeException("Booking already accepted by another provider");
+//        }
+//
+//         // Notification service Integration
+//
+//        if (booking.getCity() != null && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
+//            throw new RuntimeException("Booking is in a different city");
+//        }
+//        User providerUser = userRepo.findById(providerId)
+//                .orElseThrow(() -> {
+//                    log.error("User not found");
+//                    return new RuntimeException("User not found");
+//                });
+//
+//        String providerName = providerUser.getName();
+//
+//        // Update the SAME notification row for this booking
+//        //Customer notification
+//        notificationService.upsertBookingNotification(
+//                booking.getCustomerId(),
+//                booking.getId(),
+//                providerName + " will service your booking"
+//        );
+//
+//        // Provider notification
+//        notificationService.upsertBookingNotification(
+//                providerId,
+//                booking.getId(),
+//                "You accepted Booking #" + booking.getId()
+//        );
+//
+//        log.debug("Job accepted successfully");
+//    }
+
+
     @Transactional
     public void acceptJob(Long providerId, Long bookingId) {
         log.trace("Entering acceptJob method");
@@ -291,11 +368,21 @@ public class PService {
             throw new RuntimeException("Booking already accepted by another provider");
         }
 
-         // Notification service Integration
+        //  IMPORTANT: booking object in memory is stale because assignIfPending is an UPDATE query.
+        // So do NOT trust booking.getProviderId()/status after this.
+        // We already have booking.getCustomerId() from the earlier fetch (safe).
 
-        if (booking.getCity() != null && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
-            throw new RuntimeException("Booking is in a different city");
-        }
+        // ============================
+        //  JOB START OTP
+        // ============================
+
+        String otp = generateNumericOtp(4);
+        String otpHash = otpEncoder().encode(otp);
+
+        bookingRepo.updateStartOtp(bookingId, otpHash, LocalDateTime.now());
+
+        // Notification service Integration
+
         User providerUser = userRepo.findById(providerId)
                 .orElseThrow(() -> {
                     log.error("User not found");
@@ -304,22 +391,47 @@ public class PService {
 
         String providerName = providerUser.getName();
 
-        // Update the SAME notification row for this booking
-        //Customer notification
+        // Customer notification: provider assigned
         notificationService.upsertBookingNotification(
                 booking.getCustomerId(),
                 booking.getId(),
                 providerName + " will service your booking"
         );
 
-        // Provider notification
+        //  Customer notification: share OTP with provider (Urban Company flow)
+        notificationService.upsertBookingNotification(
+                booking.getCustomerId(),
+                booking.getId(),
+                "Job Start OTP for Booking #" + booking.getId() + " is: " + otp + " (Share with provider to start the job)"
+        );
+
+        // Provider notification: accepted
         notificationService.upsertBookingNotification(
                 providerId,
                 booking.getId(),
                 "You accepted Booking #" + booking.getId()
         );
 
-        log.debug("Job accepted successfully");
+        //  Provider reminder: ask customer OTP
+        notificationService.upsertBookingNotification(
+                providerId,
+                booking.getId(),
+                "Ask customer for OTP to start Booking #" + booking.getId()
+        );
+
+        log.debug("Job accepted successfully (OTP generated)");
+    }
+
+    private BCryptPasswordEncoder otpEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    private String generateNumericOtp(int digits) {
+        SecureRandom random = new SecureRandom();
+        int min = (int) Math.pow(10, digits - 1);
+        int max = (int) Math.pow(10, digits) - 1;
+        int val = random.nextInt(max - min + 1) + min;
+        return String.valueOf(val);
     }
 
     // Reject the booking

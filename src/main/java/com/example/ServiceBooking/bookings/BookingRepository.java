@@ -113,6 +113,23 @@ group by b.customerId
         long getTotalBookings();
     }
 
+    @Modifying
+    @Query("""
+        update Booking b
+           set b.startOtpHash = :hash,
+               b.startOtpGeneratedAt = :generatedAt
+         where b.id = :bookingId
+           and b.startOtpVerifiedAt is null
+    """)
+    int updateStartOtp(@Param("bookingId") Long bookingId,
+                       @Param("hash") String hash,
+                       @Param("generatedAt") LocalDateTime generatedAt);
+
+    @Query("""
+        select b.customerId from Booking b where b.id = :bookingId
+    """)
+    Long findCustomerIdByBookingId(@Param("bookingId") Long bookingId);
+
 
 }
 

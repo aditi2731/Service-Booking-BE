@@ -38,5 +38,23 @@ public class Booking {
     // Added from the SubService entity to store the price at the time of booking
 //    private BigDecimal basePrice;
     private BigDecimal price;
+    /**
+     * Store only hash (BCrypt). Never store raw OTP.
+     */
+    @Column(length = 100)
+    private String startOtpHash;
+
+    private LocalDateTime startOtpGeneratedAt;
+
+    /**
+     * When provider successfully verifies OTP.
+     */
+    private LocalDateTime startOtpVerifiedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (status == null) status = BookingStatus.PENDING;
+    }
 }
 
