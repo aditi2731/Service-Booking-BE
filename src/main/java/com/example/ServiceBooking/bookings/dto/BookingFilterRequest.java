@@ -29,6 +29,9 @@ public record BookingFilterRequest(
         String sortBy,
 
         @Pattern(regexp = "^(ASC|DESC)?$", message = "Invalid sortOrder value. Allowed: ASC, DESC")
-        String sortOrder
+        String sortOrder,
+
+        @Size(max = 100, message = "City must not exceed 100 characters")
+        String city
 ) {}
 

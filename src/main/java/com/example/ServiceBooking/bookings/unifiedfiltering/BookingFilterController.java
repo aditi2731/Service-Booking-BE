@@ -59,7 +59,7 @@ public class BookingFilterController {
 
         // If body missing -> treat as all missing -> return all visible bookings for role
         BookingFilterRequest safe = (request == null)
-                ? new BookingFilterRequest(null, null, null, null, null, null, null, null)
+                ? new BookingFilterRequest(null, null, null, null, null, null, null, null, null)
                 : request;
 
         return filterService.filterBookings(userId(), currentRole(), safe, pageable);
@@ -73,7 +73,7 @@ public class BookingFilterController {
             @PageableDefault(size = 20) Pageable pageable
     ) {
         log.info("Default booking filter GET called");
-        BookingFilterRequest empty = new BookingFilterRequest(null, null, null, null, null, null, null, null);
+        BookingFilterRequest empty = new BookingFilterRequest(null, null, null, null, null, null, null, null, null);
         return filterService.filterBookings(userId(), currentRole(), empty, pageable);
     }
 }

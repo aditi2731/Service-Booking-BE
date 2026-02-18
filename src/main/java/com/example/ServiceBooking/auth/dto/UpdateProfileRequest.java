@@ -6,5 +6,8 @@ import jakarta.validation.constraints.Size;
 public record UpdateProfileRequest(
         @NotBlank(message = "Name is required")
         @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-        String name
+        String name,
+
+        @Size(max = 100, message = "City must not exceed 100 characters")
+        String city
 ) {}

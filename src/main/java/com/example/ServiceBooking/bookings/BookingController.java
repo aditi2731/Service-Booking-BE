@@ -126,8 +126,9 @@ public class BookingController {
     @Operation(summary = "Get available slots for a service and date")
     @GetMapping("/slots")
     public List<SlotResponse> slots(@RequestParam Long serviceId,
-                                    @RequestParam LocalDate date) {
-        return service.getSlotsForService(serviceId, date);
+                                    @RequestParam LocalDate date,
+                                    @RequestParam String city) {
+        return service.getSlotsForService(serviceId, date, city);
     }
 
     @Operation(summary = "Book a slot - CUSTOMER")

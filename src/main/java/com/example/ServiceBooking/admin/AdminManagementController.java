@@ -37,11 +37,11 @@ public class AdminManagementController {
     // ---------- DASHBOARD ----------
     @Operation(summary = "Dashboard metrics-ADMIN")
     @GetMapping("/dashboard")
-    public DashboardResponse dashboard() {
+    public DashboardResponse dashboard(@RequestParam(required = false) String city) {
         log.trace("Entering dashboard method");
         log.debug("Processing dashboard request");
         log.info("Dashboard API called");
-        DashboardResponse response = adminService.dashboard();
+        DashboardResponse response = adminService.dashboard(city);
         log.debug("Dashboard response generated successfully");
         return response;
     }

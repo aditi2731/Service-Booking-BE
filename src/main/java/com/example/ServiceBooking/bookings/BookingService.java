@@ -1,5 +1,6 @@
 package com.example.ServiceBooking.bookings;
 
+import com.example.ServiceBooking.auth.UserRepository;
 import com.example.ServiceBooking.bookings.dto.*;
 import com.example.ServiceBooking.notification.NotificationService;
 import com.example.ServiceBooking.providermanagement.*;
@@ -28,6 +29,7 @@ public class BookingService {
     private final ProviderAvailabilityRepository availabilityRepo;
     private final ProviderServiceRepository providerServiceRepo;
     private final ProviderProfileRepository providerProfileRepo;
+    private final UserRepository userRepo;
 
 
     // Create Booking (CUSTOMER)
@@ -47,6 +49,7 @@ public class BookingService {
         booking.setServiceId(req.serviceId());
         booking.setDateTime(req.dateTime());
         booking.setLocation(req.location());
+        booking.setCity(resolveUserCity(customerId));
         booking.setPrice(subService.getBasePrice());
         booking.setStatus(BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
@@ -171,21 +174,25 @@ public class BookingService {
                 b.getServiceId(),
                 b.getDateTime(),
                 b.getLocation(),
+                b.getCity(),
                 b.getStatus()
         );
     }
 
 
     //slots Feature
-    public List<SlotResponse> getSlotsForService(Long serviceId, LocalDate date) {
+    public List<SlotResponse> getSlotsForService(Long serviceId, LocalDate date, String city) {
 
         List<Long> providerIds = providerServiceRepo.findProviderIdsBySubServiceId(serviceId);
         if (providerIds.isEmpty()) return List.of();
 
+        if (city == null || city.isBlank()) {
+            throw new RuntimeException("City is required");
+        }
+
+        List<Long> eligibleInCity = providerProfileRepo.findEligibleProviderIdsByCity(city.trim());
         List<Long> eligibleProviders = providerIds.stream()
-                .filter(pid -> providerProfileRepo.findById(pid)
-                        .map(p -> p.isApproved() && p.isOnline())
-                        .orElse(false))
+                .filter(eligibleInCity::contains)
                 .toList();
 
         if (eligibleProviders.isEmpty()) return List.of();
@@ -286,9 +293,11 @@ public class BookingService {
 
         ProviderAvailability lockedSlot = null;
         Long providerId = req.providerId();
+        String city = resolveUserCity(customerId);
 
         // 1) If customer selected provider explicitly -> lock that slot
         if (providerId != null) {
+            ensureProviderCityMatch(providerId, city);
             lockedSlot = availabilityRepo.lockAvailableSlot(providerId, date, start, end)
                     .orElseThrow(() -> new RuntimeException("Slot not available"));
         } else {
@@ -298,7 +307,7 @@ public class BookingService {
 
             for (Long pid : providerIds) {
                 boolean eligible = providerProfileRepo.findById(pid)
-                        .map(p -> p.isApproved() && p.isOnline())
+                        .map(p -> p.isApproved() && p.isOnline() && city.equalsIgnoreCase(p.getCity()))
                         .orElse(false);
 
                 if (!eligible) continue;
@@ -332,6 +341,7 @@ public class BookingService {
         booking.setServiceId(req.serviceId());
         booking.setDateTime(req.dateTime());
         booking.setLocation(req.location());
+        booking.setCity(city);
         booking.setStatus(BookingStatus.ACCEPTED);
         booking.setCreatedAt(LocalDateTime.now());
 
@@ -367,8 +377,28 @@ public class BookingService {
                 saved.getServiceId(),
                 saved.getDateTime(),
                 saved.getLocation(),
+                saved.getCity(),
                 saved.getStatus()
         );
+    }
+
+    private String resolveUserCity(Long userId) {
+        String city = userRepo.findById(userId)
+                .map(u -> u.getCity())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (city == null || city.isBlank()) {
+            throw new RuntimeException("User city not set");
+        }
+        return city;
+    }
+
+    private void ensureProviderCityMatch(Long providerId, String city) {
+        boolean matches = providerProfileRepo.findById(providerId)
+                .map(p -> p.getCity() != null && p.getCity().equalsIgnoreCase(city))
+                .orElse(false);
+        if (!matches) {
+            throw new RuntimeException("Provider is in a different city");
+        }
     }
 
 

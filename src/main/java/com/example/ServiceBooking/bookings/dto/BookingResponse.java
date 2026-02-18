@@ -9,6 +9,7 @@ public record BookingResponse(
         Long serviceId,
         LocalDateTime dateTime,
         String location,
+        String city,
         BookingStatus status
 ) {}
 

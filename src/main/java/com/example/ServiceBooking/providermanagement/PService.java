@@ -2,6 +2,7 @@ package com.example.ServiceBooking.providermanagement;
 
 
 
+import com.example.ServiceBooking.auth.Role;
 import com.example.ServiceBooking.auth.User;
 import com.example.ServiceBooking.auth.UserRepository;
 //import com.example.ServiceBooking.booking.*;
@@ -57,23 +58,37 @@ public class PService {
                     return new RuntimeException("User not found");
                 });
 
-        ProviderProfile profile = ProviderProfile.builder()
-                .user(user)
-                .approved(false)
-                .online(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+        //  Must be provider
+        if (user.getRole() != Role.PROVIDER) {
+            throw new RuntimeException("Only providers can setup provider profile");
+        }
+
+        // Allow setup in onboarding status
+        if (user.getStatus() == com.example.ServiceBooking.auth.Status.PENDING) {
+            throw new RuntimeException("Verify OTP before setting up provider profile");
+        }
+        if (user.getStatus() == com.example.ServiceBooking.auth.Status.SUSPENDED
+                || user.getStatus() == com.example.ServiceBooking.auth.Status.DELETED) {
+            throw new RuntimeException("Account not allowed");
+        }
+        if (user.getStatus() != com.example.ServiceBooking.auth.Status.PENDING_APPROVAL
+                && user.getStatus() != com.example.ServiceBooking.auth.Status.ACTIVE) {
+            throw new RuntimeException("Invalid status for provider setup: " + user.getStatus());
+        }
+
+        // Update existing profile (created during OTP verification) with setup details
+        ProviderProfile profile = profileRepo.findByUserId(userId)
+                .orElseGet(() -> ProviderProfile.builder().user(user).build());
+
+        profile.setApproved(false); // stays false until admin approves
+        profile.setOnline(false);
+        profile.setCity(request.getCity().trim());
+        profile.setCreatedAt(profile.getCreatedAt() != null ? profile.getCreatedAt() : LocalDateTime.now());
 
         profileRepo.save(profile);
 
-//        ProviderProfile profile = new ProviderProfile();
-//        profile.setUser(user);
-//        profile.setApproved(false);
-//        profile.setOnline(false);
-//        profile.setCreatedAt(LocalDateTime.now());
-//
-//        profileRepo.save(profile);
-
+        // Optional: prevent duplicate mappings (recommended)
+        // providerServiceRepo.deleteByProviderId(profile.getId()); // only if you have it
 
         for (Long subServiceId : request.getSubServiceIds()) {
             SubService subService = subServiceRepo.findById(subServiceId)
@@ -88,25 +103,46 @@ public class PService {
                     .build();
 
             providerServiceRepo.save(mapping);
-
-            //Notification Integration
-            notificationService.notifyAllAdmins("New provider awaiting approval");
-
         }
+
+        //  Notify once (outside loop) to avoid spam
+        notificationService.notifyAllAdmins("New provider awaiting approval");
 
         log.debug("Provider setup completed successfully");
     }
+
 
     public void uploadDocument(Long userId, DocumentRequest request) {
         log.trace("Entering uploadDocument method");
         log.debug("Processing document upload");
         log.info("Uploading provider document");
 
-        ProviderProfile profile = profileRepo.findById(userId)
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("Provider not found");
-                    return new RuntimeException("Provider not found");
+                    log.error("User not found");
+                    return new RuntimeException("User not found");
                 });
+
+        //  Must be provider
+        if (user.getRole() != Role.PROVIDER) {
+            throw new RuntimeException("Only providers can upload documents");
+        }
+
+        //  Allow upload in onboarding status
+        if (user.getStatus() == com.example.ServiceBooking.auth.Status.PENDING) {
+            throw new RuntimeException("Verify OTP before uploading documents");
+        }
+        if (user.getStatus() == com.example.ServiceBooking.auth.Status.SUSPENDED
+                || user.getStatus() == com.example.ServiceBooking.auth.Status.DELETED) {
+            throw new RuntimeException("Account not allowed");
+        }
+        if (user.getStatus() != com.example.ServiceBooking.auth.Status.PENDING_APPROVAL
+                && user.getStatus() != com.example.ServiceBooking.auth.Status.ACTIVE) {
+            throw new RuntimeException("Invalid status for document upload: " + user.getStatus());
+        }
+
+        ProviderProfile profile = profileRepo.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Provider profile not found"));
 
         ProviderDocument doc = ProviderDocument.builder()
                 .documentType(request.getDocumentType())
@@ -116,30 +152,28 @@ public class PService {
 
         docRepo.save(doc);
 
-        //Notification Integration
-        User providerUser = userRepo.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("User not found");
-                    return new RuntimeException("User not found");
-                });
-
-        String providerName = providerUser.getName();
-
-        notificationService.notifyAllAdmins("Provider " + providerName + " uploaded new document");
+        // Notify admins
+        notificationService.notifyAllAdmins(
+                "Provider " + user.getName() + " uploaded new document"
+        );
 
         log.debug("Document uploaded successfully");
     }
+
 
     public void toggleAvailability(Long userId, boolean online) {
         log.trace("Entering toggleAvailability method");
         log.debug("Processing availability toggle");
         log.info("Toggling provider availability");
 
-        ProviderProfile profile = profileRepo.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("Provider not found");
-                    return new RuntimeException("Provider not found");
-                });
+//        ProviderProfile profile = profileRepo.findById(userId)
+//                .orElseThrow(() -> {
+//                    log.error("Provider not found");
+//                    return new RuntimeException("Provider not found");
+//                });
+        ProviderProfile profile = profileRepo.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+
 
         if (!profile.isApproved()) {
             log.error("Provider not approved");
@@ -195,13 +229,20 @@ public class PService {
                     log.error("Provider not found");
                     return new RuntimeException("Provider not found");
                 });
+//        ProviderProfile profile = profileRepo.findByUserId(userId)
+//                .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+
 
         if (!profile.isApproved() || !profile.isOnline()) {
             log.error("Provider not available");
             throw new RuntimeException("Provider not available");
         }
 
-        List<Booking> jobs = bookingRepo.findByStatus(BookingStatus.PENDING);
+        if (profile.getCity() == null || profile.getCity().isBlank()) {
+            throw new RuntimeException("Provider city not set");
+        }
+
+        List<Booking> jobs = bookingRepo.findByStatusAndCity(BookingStatus.PENDING, profile.getCity());
         log.debug("Available jobs retrieved successfully");
         return jobs;
     }
@@ -224,6 +265,19 @@ public class PService {
             throw new RuntimeException("Provider not available");
         }
 
+        if (profile.getCity() == null || profile.getCity().isBlank()) {
+            throw new RuntimeException("Provider city not set");
+        }
+
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> {
+                    log.error("Booking not found");
+                    return new RuntimeException("Booking not found");
+                });
+
+        if (booking.getCity() != null && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
+            throw new RuntimeException("Booking is in a different city");
+        }
 
         int updatedRows = bookingRepo.assignIfPending(
                 bookingId,
@@ -238,12 +292,10 @@ public class PService {
         }
 
          // Notification service Integration
-        Booking booking = bookingRepo.findById(bookingId)
-                .orElseThrow(() -> {
-                    log.error("Booking not found");
-                    return new RuntimeException("Booking not found");
-                });
 
+        if (booking.getCity() != null && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
+            throw new RuntimeException("Booking is in a different city");
+        }
         User providerUser = userRepo.findById(providerId)
                 .orElseThrow(() -> {
                     log.error("User not found");
@@ -403,6 +455,38 @@ public void setAvailabilityWindow(Long providerId, LocalDate date, LocalTime sta
     availabilityRepo.saveAll(slots);
 
 }
+
+
+//authentication
+@Transactional
+public void initializeProviderAfterOtp(Long userId) {
+    User user = userRepo.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    if (user.getRole() != Role.PROVIDER) {
+        throw new RuntimeException("Not a provider");
+    }
+
+    // Create ProviderProfile if missing
+    profileRepo.findByUserId(userId).orElseGet(() -> {
+        ProviderProfile profile = new ProviderProfile();
+        profile.setUser(user);
+        profile.setApproved(false);
+        profile.setOnline(false);
+        profile.setCity(user.getCity()); // or null if you want setup step to fill it
+        profile.setCreatedAt(LocalDateTime.now());
+        return profileRepo.save(profile);
+    });
+
+//    // Create ProviderAvailability if missing (default OFFLINE)
+//    availabilityRepo.findByUserId(userId).orElseGet(() -> {
+//        ProviderAvailability av = new ProviderAvailability();
+//        av.setUser(user);
+//        av.setStatus(AvailabilityStatus.OFFLINE);
+//        return availabilityRepo.save(av);
+//    });
+}
+
 
 
 }

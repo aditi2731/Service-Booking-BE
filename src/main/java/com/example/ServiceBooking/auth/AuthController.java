@@ -21,19 +21,31 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(summary = "Register a new user")
-    @PostMapping("/register")
-    public void register(@Valid @RequestBody RegisterRequest request) {
-        log.trace("Entering register method");
-        log.debug("Processing user registration request");
-        log.info("User registration requested");
-        try {
-            authService.register(request);
-            log.debug("User registration completed successfully");
-        } catch (Exception e) {
-            log.error("Error during user registration");
-            throw e;
-        }
+//    @Operation(summary = "Register a new user")
+//    @PostMapping("/register")
+//    public void register(@Valid @RequestBody RegisterRequest request) {
+//        log.trace("Entering register method");
+//        log.debug("Processing user registration request");
+//        log.info("User registration requested");
+//        try {
+//            authService.register(request);
+//            log.debug("User registration completed successfully");
+//        } catch (Exception e) {
+//            log.error("Error during user registration");
+//            throw e;
+//        }
+//    }
+
+    @Operation(summary = "Register a new customer")
+    @PostMapping("/customer/register")
+    public void registerCustomer(@Valid @RequestBody CustomerRegisterRequest request) {
+        authService.registerCustomer(request);
+    }
+
+    @Operation(summary = "Register a new provider (step-1: account + OTP)")
+    @PostMapping("/provider/register")
+    public void registerProvider(@Valid @RequestBody ProviderRegisterRequest request) {
+        authService.registerProvider(request);
     }
 
     @Operation(summary = "Resend OTP to user's email")

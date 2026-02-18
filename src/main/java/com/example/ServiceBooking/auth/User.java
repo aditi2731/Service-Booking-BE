@@ -25,6 +25,7 @@ public class User {
     @JsonIgnore
     private String password;
 
+    private String city;
 
 
     @Enumerated(EnumType.STRING)

@@ -88,6 +88,11 @@ public class BookingFilterService {
 //        Specification<Booking> spec = Specification.where((Specification<Booking>) null);
         Specification<Booking> spec = (root, q, cb) -> cb.conjunction();
 
+        String cityFilter = resolveCityFilter(callerUserId, callerRole, req.city());
+        if (cityFilter != null && !cityFilter.isBlank()) {
+            String normalizedCity = cityFilter.trim();
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("city"), normalizedCity));
+        }
 
         if (req.status() != null) {
             spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), req.status()));
@@ -143,6 +148,20 @@ public class BookingFilterService {
         };
     }
 
+    private String resolveCityFilter(Long callerUserId, Role role, String requestedCity) {
+        if (role == Role.ADMIN) {
+            return requestedCity;
+        }
+
+        String city = userRepo.findById(callerUserId)
+                .map(u -> u.getCity())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (city == null || city.isBlank()) {
+            throw new RuntimeException("User city not set");
+        }
+        return city;
+    }
+
     private Pageable applySorting(BookingFilterRequest req, Pageable pageable) {
         String sortBy = req.sortBy();
         String sortOrder = req.sortOrder();
@@ -179,6 +198,7 @@ public class BookingFilterService {
                 b.getServiceId(),
                 b.getDateTime(),
                 b.getLocation(),
+                b.getCity(),
                 b.getStatus()
         );
     }

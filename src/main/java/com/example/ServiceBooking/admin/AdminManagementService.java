@@ -49,22 +49,30 @@ public class AdminManagementService {
 
     // ---------- DASHBOARD ----------
 
-    public DashboardResponse dashboard() {
+    public DashboardResponse dashboard(String city) {
         log.trace("Entering dashboard method");
         log.info("Admin dashboard requested");
         log.debug("Computing dashboard metrics");
 
-        long totalUsers = userRepo.count();
-        long totalCustomers = userRepo.countByRole(Role.CUSTOMER);
-        long totalProviders = userRepo.countByRole(Role.PROVIDER);
+        boolean hasCity = city != null && !city.isBlank();
 
-        long totalBookings = bookingRepo.count();
-        long completedBookings = bookingRepo.countByStatus(BookingStatus.COMPLETED);
+        long totalUsers = hasCity ? userRepo.countByCity(city.trim()) : userRepo.count();
+        long totalCustomers = hasCity ? userRepo.countByRoleAndCity(Role.CUSTOMER, city.trim()) : userRepo.countByRole(Role.CUSTOMER);
+        long totalProviders = hasCity ? userRepo.countByRoleAndCity(Role.PROVIDER, city.trim()) : userRepo.countByRole(Role.PROVIDER);
 
-        long paidPayments = paymentRepo.countByStatus(PaymentStatus.PAID);
+        long totalBookings = hasCity ? bookingRepo.countByCity(city.trim()) : bookingRepo.count();
+        long completedBookings = hasCity
+                ? bookingRepo.countByStatusAndCity(BookingStatus.COMPLETED, city.trim())
+                : bookingRepo.countByStatus(BookingStatus.COMPLETED);
+
+        long paidPayments = hasCity
+                ? paymentRepo.countByStatusAndCity(PaymentStatus.PAID, city.trim())
+                : paymentRepo.countByStatus(PaymentStatus.PAID);
 
         // Gross revenue = sum of PAID payment amounts
-        BigDecimal gross = paymentRepo.sumAmountByStatus(PaymentStatus.PAID);
+        BigDecimal gross = hasCity
+                ? paymentRepo.sumAmountByStatusAndCity(PaymentStatus.PAID, city.trim())
+                : paymentRepo.sumAmountByStatus(PaymentStatus.PAID);
         if (gross == null) {
             log.warn("No paid payments found, setting gross revenue to zero");
             gross = BigDecimal.ZERO;
@@ -125,23 +133,64 @@ public class AdminManagementService {
         log.trace("Entering approveProvider method");
         log.debug("Processing provider approval request");
         log.info("Admin provider approval requested");
+
+        // IMPORTANT:
+        // In your codebase providerId is currently ProviderProfile.id (because you use findById).
+        // We'll derive the actual User ID from the profile.
         ProviderProfile profile = providerProfileRepo.findById(providerId)
                 .orElseThrow(() -> {
-                    log.error("Provider not found");
+                    log.error("Provider profile not found");
                     return new RuntimeException("Provider not found");
                 });
 
         profile.setApproved(approved);
         providerProfileRepo.save(profile);
 
+        // Update the user status too (THIS is why login was still blocked)
+        User user = profile.getUser();
+        if (user == null) {
+            throw new RuntimeException("Provider user not linked to profile");
+        }
+
+        if (user.getRole() != Role.PROVIDER) {
+            throw new RuntimeException("Not a provider user");
+        }
+
+        // If approved -> ACTIVE, else keep them in PENDING_APPROVAL (or add REJECTED if you prefer)
+        user.setStatus(approved ? Status.ACTIVE : Status.PENDING_APPROVAL);
+        userRepo.save(user);
+
+        //  Notification should go to USER ID (not profile ID)
         notificationService.createSystemNotification(
-                providerId,
+                user.getId(),
                 approved ? "Your profile has been approved" : "Your application was rejected"
         );
 
         log.debug("Provider approval updated successfully");
         log.info("Provider approval updated");
     }
+
+
+//    @Transactional
+//    public void approveProviderByUserId(Long userId, boolean approved) {
+//        ProviderProfile profile = providerProfileRepo.findByUserId(userId)
+//                .orElseThrow(() -> new RuntimeException("Provider profile not found"));
+//
+//        profile.setApproved(approved);
+//        providerProfileRepo.save(profile);
+//
+//        User user = userRepo.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//        user.setStatus(approved ? Status.ACTIVE : Status.PENDING_APPROVAL);
+//        userRepo.save(user);
+//
+//        notificationService.createSystemNotification(
+//                userId,
+//                approved ? "Your profile has been approved" : "Your application was rejected"
+//        );
+//    }
+
 
     // ---------- SERVICE CONTROLS ----------
 
@@ -263,6 +312,11 @@ public class AdminManagementService {
         if (!profile.isApproved()) {
             log.warn("Provider not approved, rejecting assignment");
             throw new RuntimeException("Provider not approved");
+        }
+
+        if (booking.getCity() != null && profile.getCity() != null
+                && !booking.getCity().equalsIgnoreCase(profile.getCity())) {
+            throw new RuntimeException("Booking and provider are in different cities");
         }
 
         // minimal: allow assignment only if booking is PENDING

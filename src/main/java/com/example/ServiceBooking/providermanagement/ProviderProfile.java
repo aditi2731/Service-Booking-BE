@@ -30,6 +30,7 @@ public class ProviderProfile {
     private boolean approved;
     private boolean online;
 
+    private String city;
 
     private String rejectionReason;
 

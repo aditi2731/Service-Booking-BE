@@ -47,6 +47,9 @@ public class UserService {
                 });
 
         user.setName(request.name());
+        if (request.city() != null && !request.city().isBlank()) {
+            user.setCity(request.city().trim());
+        }
         userRepository.save(user);
 
         log.debug("User profile updated successfully");
@@ -114,6 +117,7 @@ public class UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
+                user.getCity(),
                 user.getRole(),
                 user.getStatus()
         );

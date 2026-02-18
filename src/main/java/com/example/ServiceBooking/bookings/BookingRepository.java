@@ -23,6 +23,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpec
     List<Booking> findByProviderId(Long providerId);
 
     List<Booking> findByStatus(BookingStatus status);
+    List<Booking> findByStatusAndCity(BookingStatus status, String city);
 
     Optional<Booking> findByIdAndStatus(Long id, BookingStatus status);
 
@@ -64,9 +65,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpec
     Page<Booking> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     long countByStatus(BookingStatus status);
+    long countByCity(String city);
+    long countByStatusAndCity(BookingStatus status, String city);
 
     long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     long countByStatusAndCreatedAtBetween(BookingStatus status, LocalDateTime from, LocalDateTime to);
+    long countByCreatedAtBetweenAndCity(LocalDateTime from, LocalDateTime to, String city);
+    long countByStatusAndCreatedAtBetweenAndCity(BookingStatus status, LocalDateTime from, LocalDateTime to, String city);
 
     long countByProviderIdAndStatus(Long providerId, BookingStatus status);
 

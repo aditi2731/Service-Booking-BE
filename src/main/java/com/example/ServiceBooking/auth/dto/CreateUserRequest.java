@@ -16,6 +16,10 @@ public record CreateUserRequest(
         String email,
 
         @NotNull(message = "Role is required")
-        Role role
+        Role role,
+
+        @NotBlank(message = "City is required")
+        @Size(max = 100, message = "City must not exceed 100 characters")
+        String city
 ) {}
 
