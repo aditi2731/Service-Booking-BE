@@ -5,7 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record AvailabilityWindowRequest(
-        @NotNull LocalDate date,
+        @NotNull LocalDate fromDate,
+        @NotNull LocalDate toDate,
         @NotNull LocalTime startTime,
         @NotNull LocalTime endTime
 ) {}

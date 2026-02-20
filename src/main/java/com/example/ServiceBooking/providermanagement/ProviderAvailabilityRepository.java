@@ -42,6 +42,20 @@ public interface ProviderAvailabilityRepository extends JpaRepository<ProviderAv
 
     boolean existsByProviderIdAndDate(Long providerId, LocalDate date);
     void deleteByProviderIdAndDate(Long providerId, LocalDate date);
+    void deleteByProviderIdAndDateAndStatus(Long providerId, LocalDate date, AvailabilityStatus status);
+
+    @Query("""
+    select a from ProviderAvailability a
+    where a.providerId = :providerId
+      and a.date = :date
+      and a.startTime = :start
+      and a.endTime = :end
+""")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<ProviderAvailability> lockSlot(
+            Long providerId, LocalDate date, LocalTime start, LocalTime end
+    );
+
 
 }
 

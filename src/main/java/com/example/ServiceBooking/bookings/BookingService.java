@@ -104,6 +104,9 @@ public class BookingService {
     // ==================
     // CANCEL BOOKING
     // ==================
+
+
+    @Transactional
     public void cancelBooking(Long bookingId, Long userId) {
         log.trace("Entering cancelBooking method");
         log.info("Cancelling booking");
@@ -121,8 +124,31 @@ public class BookingService {
             throw new RuntimeException("Unauthorized cancellation");
         }
 
+
+        BookingStatus oldStatus = booking.getStatus();
+
         booking.setStatus(BookingStatus.CANCELLED);
         repo.save(booking);
+
+
+        if (booking.getProviderId() != null
+                && booking.getDateTime() != null
+                && oldStatus == BookingStatus.ACCEPTED
+                && booking.getStartOtpVerifiedAt() == null){
+
+            LocalDate date = booking.getDateTime().toLocalDate();
+            LocalTime start = booking.getDateTime().toLocalTime();
+            LocalTime end = start.plusHours(1);
+
+            availabilityRepo.lockSlot(booking.getProviderId(), date, start, end)
+                    .ifPresent(slot -> {
+                        if (slot.getStatus() == AvailabilityStatus.BOOKED) {
+                            slot.setStatus(AvailabilityStatus.AVAILABLE);
+                            availabilityRepo.save(slot);
+                        }
+                    });
+        }
+
 
         if (userId.equals(booking.getCustomerId())) {
             notificationService.upsertBookingNotification(
@@ -154,6 +180,58 @@ public class BookingService {
 
         log.debug("Booking cancelled successfully");
     }
+
+
+//    public void cancelBooking(Long bookingId, Long userId) {
+//        log.trace("Entering cancelBooking method");
+//        log.info("Cancelling booking");
+//
+//        Booking booking = getBooking(bookingId);
+//
+//        if (booking.getStatus() == BookingStatus.COMPLETED) {
+//            log.error("Cannot cancel a completed booking");
+//            throw new RuntimeException("Cannot cancel a completed booking");
+//        }
+//
+//        if (!userId.equals(booking.getCustomerId())
+//                && (booking.getProviderId() == null || !userId.equals(booking.getProviderId()))) {
+//            log.error("Unauthorized cancellation");
+//            throw new RuntimeException("Unauthorized cancellation");
+//        }
+//
+//        booking.setStatus(BookingStatus.CANCELLED);
+//        repo.save(booking);
+//
+//        if (userId.equals(booking.getCustomerId())) {
+//            notificationService.upsertBookingNotification(
+//                    booking.getCustomerId(),
+//                    booking.getId(),
+//                    "Your booking was cancelled"
+//            );
+//
+//            if (booking.getProviderId() != null) {
+//                notificationService.upsertBookingNotification(
+//                        booking.getProviderId(),
+//                        booking.getId(),
+//                        "Booking #" + booking.getId() + " was cancelled by customer"
+//                );
+//            }
+//        } else {
+//            notificationService.upsertBookingNotification(
+//                    booking.getCustomerId(),
+//                    booking.getId(),
+//                    "Your booking was cancelled"
+//            );
+//
+//            notificationService.upsertBookingNotification(
+//                    booking.getProviderId(),
+//                    booking.getId(),
+//                    "You cancelled Booking #" + booking.getId()
+//            );
+//        }
+//
+//        log.debug("Booking cancelled successfully");
+//    }
 
     // ==================
     // LISTS
@@ -199,7 +277,7 @@ public class BookingService {
     }
 
     // =========================
-    // SLOTS FEATURE (EXISTING)
+    // SLOTS FEATURE
     // =========================
     public List<SlotResponse> getSlotsForService(Long serviceId, LocalDate date, String city) {
         log.trace("Entering getSlotsForService method");

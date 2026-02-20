@@ -222,11 +222,23 @@ public class ProviderController {
     }
 
     // Slot booking
-    @Operation(summary = "Set availability window (creates hourly slots) - PROVIDER")
+//    @Operation(summary = "Set availability window (creates hourly slots) - PROVIDER")
+//    @PutMapping("/availability/window")
+//    @PreAuthorize("hasRole('PROVIDER')")
+//    public void setAvailabilityWindow(@RequestBody @jakarta.validation.Valid AvailabilityWindowRequest req) {
+//        service.setAvailabilityWindow(userId(), req.date(), req.startTime(), req.endTime());
+//    }
+
     @PutMapping("/availability/window")
     @PreAuthorize("hasRole('PROVIDER')")
     public void setAvailabilityWindow(@RequestBody @jakarta.validation.Valid AvailabilityWindowRequest req) {
-        service.setAvailabilityWindow(userId(), req.date(), req.startTime(), req.endTime());
+        service.setAvailabilityWindow(
+                userId(),
+                req.fromDate(),
+                req.toDate(),
+                req.startTime(),
+                req.endTime()
+        );
     }
 
 

@@ -447,8 +447,6 @@ public class PService {
                     return new RuntimeException("Booking not available");
                 });
 
-        // For now, we do nothing.
-        // You can later add rejection tracking table.
         log.debug("Job rejection processed");
     }
 
@@ -534,39 +532,50 @@ public class PService {
     }
 
 
-//Slot Booking feature
-@Transactional
-public void setAvailabilityWindow(Long providerId, LocalDate date, LocalTime start, LocalTime end) {
 
-    if (!start.isBefore(end)) throw new RuntimeException("startTime must be before endTime");
+    @Transactional
+    public void setAvailabilityWindow(Long providerId,
+                                      LocalDate fromDate,
+                                      LocalDate toDate,
+                                      LocalTime start,
+                                      LocalTime end) {
 
-    ProviderProfile profile = profileRepo.findById(providerId)
-            .orElseThrow(() -> new RuntimeException("Provider not found"));
+        if (fromDate.isAfter(toDate)) throw new RuntimeException("fromDate must be <= toDate");
+        if (!start.isBefore(end)) throw new RuntimeException("startTime must be before endTime");
 
-    if (!profile.isApproved() || !profile.isOnline()) {
-        throw new RuntimeException("Provider not available");
+        ProviderProfile profile = profileRepo.findById(providerId)
+                .orElseThrow(() -> new RuntimeException("Provider not found"));
+
+        if (!profile.isApproved() || !profile.isOnline()) {
+            throw new RuntimeException("Provider not available");
+        }
+
+        // Loop each day and generate hourly slots
+        LocalDate d = fromDate;
+        while (!d.isAfter(toDate)) {
+
+
+            availabilityRepo.deleteByProviderIdAndDateAndStatus(providerId, d, AvailabilityStatus.AVAILABLE);
+
+            var slots = new ArrayList<ProviderAvailability>();
+
+            LocalTime t = start;
+            while (t.plusHours(1).compareTo(end) <= 0) {
+                ProviderAvailability s = new ProviderAvailability();
+                s.setProviderId(providerId);
+                s.setDate(d);
+                s.setStartTime(t);
+                s.setEndTime(t.plusHours(1));
+                s.setStatus(AvailabilityStatus.AVAILABLE);
+                slots.add(s);
+                t = t.plusHours(1);
+            }
+
+            availabilityRepo.saveAll(slots);
+
+            d = d.plusDays(1);
+        }
     }
-
-    // remove old slots for that day (idempotent)
-    availabilityRepo.deleteByProviderIdAndDate(providerId, date);
-
-    var slots = new ArrayList<ProviderAvailability>();
-
-    LocalTime t = start;
-    while (t.plusHours(1).compareTo(end) <= 0) {
-        ProviderAvailability s = new ProviderAvailability();
-        s.setProviderId(providerId);
-        s.setDate(date);
-        s.setStartTime(t);
-        s.setEndTime(t.plusHours(1));
-        s.setStatus(AvailabilityStatus.AVAILABLE);
-        slots.add(s);
-        t = t.plusHours(1);
-    }
-
-    availabilityRepo.saveAll(slots);
-
-}
 
 
 //authentication
