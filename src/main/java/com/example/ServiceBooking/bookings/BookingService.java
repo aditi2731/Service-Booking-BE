@@ -41,20 +41,27 @@ public class BookingService {
 
 
     //  ========================
-    //  Get nearby providers based on customer's city and optional service filter
+    //  Get nearby providers based on customer's city and optional service filter3
     //  ========================
     public List<NearbyProviderResponse> getNearbyProviders(Long customerId, Long serviceId) {
+        log.trace("Entering getNearbyProviders method");
+        log.info("Fetching nearby providers");
+
         String city = resolveUserCity(customerId);
 
         List<Long> providerIds = (serviceId != null)
                 ? providerProfileRepo.findEligibleProviderIdsByCityAndService(city, serviceId)
                 : providerProfileRepo.findEligibleProviderIdsByCityOnly(city);
 
-        if (providerIds.isEmpty()) return List.of();
+        if (providerIds.isEmpty()) {
+            log.warn("No providers found");
+            return List.of();
+        }
 
         // Load provider names (from users table)
         // If you want fewer queries, you can create a query joining user + profile;
         // but this works fine for now.
+        log.debug("Nearby providers retrieved successfully");
         return providerIds.stream()
                 .map(pid -> {
                     String name = userRepo.findById(pid).map(User::getName).orElse("Provider");
@@ -69,6 +76,7 @@ public class BookingService {
     // =========================
     public void createBooking(Long customerId, BookingCreateRequest req) {
         log.trace("Entering createBooking method");
+        log.info("Creating new booking");
 
         SubService subService = subServiceRepo.findById(req.serviceId())
                 .orElseThrow(() -> new RuntimeException("Service not found"));
@@ -98,14 +106,18 @@ public class BookingService {
     // ==================
     public void cancelBooking(Long bookingId, Long userId) {
         log.trace("Entering cancelBooking method");
+        log.info("Cancelling booking");
+
         Booking booking = getBooking(bookingId);
 
         if (booking.getStatus() == BookingStatus.COMPLETED) {
+            log.error("Cannot cancel a completed booking");
             throw new RuntimeException("Cannot cancel a completed booking");
         }
 
         if (!userId.equals(booking.getCustomerId())
                 && (booking.getProviderId() == null || !userId.equals(booking.getProviderId()))) {
+            log.error("Unauthorized cancellation");
             throw new RuntimeException("Unauthorized cancellation");
         }
 
@@ -139,20 +151,31 @@ public class BookingService {
                     "You cancelled Booking #" + booking.getId()
             );
         }
+
+        log.debug("Booking cancelled successfully");
     }
 
     // ==================
     // LISTS
     // ==================
     public List<BookingResponse> customerBookings(Long customerId) {
+        log.trace("Entering customerBookings method");
+        log.info("Fetching customer bookings");
+        log.debug("Customer bookings retrieved successfully");
         return repo.findByCustomerId(customerId).stream().map(this::map).toList();
     }
 
     public List<BookingResponse> providerBookings(Long providerId) {
+        log.trace("Entering providerBookings method");
+        log.info("Fetching provider bookings");
+        log.debug("Provider bookings retrieved successfully");
         return repo.findByProviderId(providerId).stream().map(this::map).toList();
     }
 
     public List<BookingResponse> history(Long userId, boolean isCustomer) {
+        log.trace("Entering history method");
+        log.info("Fetching booking history");
+        log.debug("Booking history retrieved successfully");
         return isCustomer
                 ? repo.findByCustomerIdOrderByCreatedAtDesc(userId).stream().map(this::map).toList()
                 : repo.findByProviderIdOrderByCreatedAtDesc(userId).stream().map(this::map).toList();
@@ -179,14 +202,26 @@ public class BookingService {
     // SLOTS FEATURE (EXISTING)
     // =========================
     public List<SlotResponse> getSlotsForService(Long serviceId, LocalDate date, String city) {
-        List<Long> providerIds = providerServiceRepo.findProviderIdsBySubServiceId(serviceId);
-        if (providerIds.isEmpty()) return List.of();
+        log.trace("Entering getSlotsForService method");
+        log.info("Fetching available slots for service");
 
-        if (city == null || city.isBlank()) throw new RuntimeException("City is required");
+        List<Long> providerIds = providerServiceRepo.findProviderIdsBySubServiceId(serviceId);
+        if (providerIds.isEmpty()) {
+            log.warn("No providers found for service");
+            return List.of();
+        }
+
+        if (city == null || city.isBlank()) {
+            log.error("City is required");
+            throw new RuntimeException("City is required");
+        }
 
         List<Long> eligibleInCity = providerProfileRepo.findEligibleProviderIdsByCity(city.trim());
         List<Long> eligibleProviders = providerIds.stream().filter(eligibleInCity::contains).toList();
-        if (eligibleProviders.isEmpty()) return List.of();
+        if (eligibleProviders.isEmpty()) {
+            log.warn("No eligible providers found in city");
+            return List.of();
+        }
 
         List<ProviderAvailability> allSlots =
                 availabilityRepo.findAvailableSlotsForProviders(eligibleProviders, date);
@@ -197,6 +232,7 @@ public class BookingService {
                         java.util.stream.Collectors.counting()
                 ));
 
+        log.debug("Slots retrieved successfully");
         return grouped.entrySet().stream()
                 .map(e -> {
                     String[] parts = e.getKey().split("-");
@@ -211,6 +247,8 @@ public class BookingService {
     // =========================
     @Transactional
     public BookingResponse bookSlot(Long customerId, SlotBookingRequest req) {
+        log.trace("Entering bookSlot method");
+        log.info("Booking slot for customer");
 
         LocalDate date = req.dateTime().toLocalDate();
         LocalTime start = req.dateTime().toLocalTime();
@@ -223,10 +261,16 @@ public class BookingService {
         if (providerId != null) {
             ensureProviderCityMatch(providerId, city);
             lockedSlot = availabilityRepo.lockAvailableSlot(providerId, date, start, end)
-                    .orElseThrow(() -> new RuntimeException("Slot not available"));
+                    .orElseThrow(() -> {
+                        log.error("Slot not available");
+                        return new RuntimeException("Slot not available");
+                    });
         } else {
             List<Long> providerIds = providerServiceRepo.findProviderIdsBySubServiceId(req.serviceId());
-            if (providerIds.isEmpty()) throw new RuntimeException("No provider available for this service");
+            if (providerIds.isEmpty()) {
+                log.error("No provider available for this service");
+                throw new RuntimeException("No provider available for this service");
+            }
 
             for (Long pid : providerIds) {
                 boolean eligible = providerProfileRepo.findById(pid)
@@ -243,7 +287,10 @@ public class BookingService {
                 }
             }
 
-            if (lockedSlot == null) throw new RuntimeException("No provider available for this slot");
+            if (lockedSlot == null) {
+                log.error("No provider available for this slot");
+                throw new RuntimeException("No provider available for this slot");
+            }
         }
 
         // block overlaps for ACCEPTED + STARTED (job already in progress)
@@ -253,7 +300,10 @@ public class BookingService {
                 req.dateTime().plusMinutes(59),
                 List.of(BookingStatus.ACCEPTED, BookingStatus.STARTED)
         );
-        if (overlap) throw new RuntimeException("Provider already booked for this slot");
+        if (overlap) {
+            log.error("Provider already booked for this slot");
+            throw new RuntimeException("Provider already booked for this slot");
+        }
 
         Booking booking = new Booking();
         booking.setCustomerId(customerId);
@@ -265,7 +315,10 @@ public class BookingService {
         booking.setStatus(BookingStatus.ACCEPTED);
 
         SubService subService = subServiceRepo.findById(req.serviceId())
-                .orElseThrow(() -> new RuntimeException("Service not found"));
+                .orElseThrow(() -> {
+                    log.error("Service not found");
+                    return new RuntimeException("Service not found");
+                });
         booking.setPrice(subService.getBasePrice());
 
         Booking saved = repo.save(booking);
@@ -282,6 +335,7 @@ public class BookingService {
                 "New Job: Booking #" + saved.getId() + ". Ask customer for OTP to start the job."
         );
 
+        log.debug("Slot booked successfully");
         return map(saved);
     }
 
@@ -294,22 +348,29 @@ public class BookingService {
      */
     @Transactional
     public void resendStartOtp(Long bookingId, Long customerId) {
+        log.trace("Entering resendStartOtp method");
+        log.info("Resending start OTP");
+
         Booking booking = getBooking(bookingId);
 
         if (!customerId.equals(booking.getCustomerId())) {
+            log.error("Unauthorized");
             throw new RuntimeException("Unauthorized");
         }
 
         if (booking.getProviderId() == null || booking.getStatus() != BookingStatus.ACCEPTED) {
+            log.error("OTP can be resent only for ACCEPTED bookings with provider assigned");
             throw new RuntimeException("OTP can be resent only for ACCEPTED bookings with provider assigned");
         }
 
         // allow resend only if not verified yet
         if (booking.getStartOtpVerifiedAt() != null) {
+            log.error("Job already started");
             throw new RuntimeException("Job already started. OTP already verified.");
         }
 
         generateAndNotifyStartOtp(booking);
+        log.debug("Start OTP resent successfully");
     }
 
     /**
@@ -318,27 +379,34 @@ public class BookingService {
      */
     @Transactional
     public void verifyStartOtp(Long bookingId, Long providerId, String otp) {
+        log.trace("Entering verifyStartOtp method");
+        log.info("Verifying start OTP");
+
         Booking booking = getBooking(bookingId);
 
         if (booking.getProviderId() == null || !providerId.equals(booking.getProviderId())) {
+            log.error("Unauthorized: This booking is not assigned to you");
             throw new RuntimeException("Unauthorized: This booking is not assigned to you");
         }
 
         if (booking.getStatus() != BookingStatus.ACCEPTED) {
+            log.error("OTP verification allowed only when booking is ACCEPTED");
             throw new RuntimeException("OTP verification allowed only when booking is ACCEPTED");
         }
 
         if (booking.getStartOtpHash() == null) {
-            // should not happen if booking was accepted through our flow
+            log.error("Start OTP not generated yet");
             throw new RuntimeException("Start OTP not generated yet");
         }
 
         if (booking.getStartOtpVerifiedAt() != null) {
+            log.error("OTP already verified");
             throw new RuntimeException("OTP already verified. Job already started.");
         }
 
         boolean matches = encoder.matches(otp.trim(), booking.getStartOtpHash());
         if (!matches) {
+            log.error("Invalid OTP");
             throw new RuntimeException("Invalid OTP");
         }
 
@@ -358,6 +426,8 @@ public class BookingService {
                 booking.getId(),
                 "OTP verified. You can start the job for Booking #" + booking.getId()
         );
+
+        log.debug("Start OTP verified successfully");
     }
 
     private void generateAndNotifyStartOtp(Booking booking) {

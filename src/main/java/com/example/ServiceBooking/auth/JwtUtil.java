@@ -45,5 +45,15 @@ public class JwtUtil {
                         .toString()
         );
     }
+
+    public Role getCurrentUserRole() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) throw new RuntimeException("Unauthenticated");
+        return auth.getAuthorities().stream()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .findFirst()
+                .map(Role::valueOf)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+    }
 }
 

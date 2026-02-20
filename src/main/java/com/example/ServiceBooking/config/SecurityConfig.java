@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/customer/**").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/ratings/provider/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/ratings/service/**").permitAll()
+                        .requestMatchers("/support/**").authenticated()
                         .requestMatchers("/bookings/**").authenticated()
                         .requestMatchers(
                                 "/v3/api-docs/**",

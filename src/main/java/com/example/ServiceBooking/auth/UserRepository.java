@@ -28,6 +28,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // helper query for name search
     @Query("select u.id from User u where lower(u.name) like lower(concat('%', :name, '%'))")
     List<Long> findUserIdsByNameLike(@Param("name") String name);
+
+    Optional<User> findFirstByRoleAndStatus(Role role, Status status);
 }
 
 

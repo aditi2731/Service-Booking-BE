@@ -3,10 +3,9 @@ package com.example.ServiceBooking.admin;
 
 
 import com.example.ServiceBooking.admin.dto.*;
-import com.example.ServiceBooking.auth.Role;
-import com.example.ServiceBooking.auth.Status;
-import com.example.ServiceBooking.auth.User;
-import com.example.ServiceBooking.auth.UserRepository;
+import com.example.ServiceBooking.auth.*;
+import com.example.ServiceBooking.auth.dto.CreateUserRequest;
+import com.example.ServiceBooking.auth.dto.UserResponse;
 import com.example.ServiceBooking.bookings.Booking;
 import com.example.ServiceBooking.bookings.BookingRepository;
 import com.example.ServiceBooking.bookings.dto.BookingStatus;
@@ -19,6 +18,7 @@ import com.example.ServiceBooking.servicecatalog.ServiceCategory;
 import com.example.ServiceBooking.servicecatalog.ServiceCategoryRepository;
 import com.example.ServiceBooking.servicecatalog.SubService;
 import com.example.ServiceBooking.servicecatalog.SubServiceRepository;
+import com.example.ServiceBooking.support.dto.CreateSupportAgentRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +26,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,8 @@ public class AdminManagementService {
     private final ServiceCategoryRepository categoryRepo;
     private final SubServiceRepository subServiceRepo;
     private final NotificationService notificationService;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${platform.commission.rate:0.20}")
     private BigDecimal commissionRate;
@@ -397,5 +402,86 @@ public class AdminManagementService {
         log.debug("Provider performance report generated successfully");
         return result;
     }
+
+    // ------------------------ SUPPORT AGENT CREATION -------------------------
+
+    @Transactional
+    public UserResponse createSupportAgent(CreateSupportAgentRequest req) {
+        log.info("Admin creating support agent");
+        log.debug("Validating support role");
+
+        if (!(req.role() == Role.SUPPORT_L1
+                || req.role() == Role.SUPPORT_REFUND
+                || req.role() == Role.SUPPORT_PROVIDER
+                || req.role() == Role.SUPPORT_MANAGER)) {
+            log.warn("Invalid role for support agent creation");
+            throw new RuntimeException("Only SUPPORT roles allowed here");
+        }
+
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8) + "@A1";
+
+        // reuse your existing create user logic (same entity)
+        User u = new User();
+        u.setName(req.name().trim());
+        u.setEmail(req.email().trim().toLowerCase());
+        u.setRole(req.role());
+        u.setStatus(Status.ACTIVE);
+        u.setPassword(passwordEncoder.encode(tempPassword));
+
+        User saved = userRepo.save(u);
+
+        String subject = "Support Account Created";
+        String body = """
+            Hello %s,
+
+            Your support account has been created.
+
+            Email: %s
+            Temporary Password: %s
+
+            Please login and change your password.
+
+            Regards,
+            Service Booking Team
+            """.formatted(saved.getName(), saved.getEmail(), tempPassword);
+
+        emailService.sendEmail(saved.getEmail(), subject, body);
+
+        notificationService.createSystemNotification(
+                saved.getId(),
+                "Welcome! Your support agent account has been created."
+        );
+
+        log.info("Support agent created successfully");
+        return mapToUserResponse(saved);
+    }
+
+
+
+    //Mapper
+//    private UserResponse mapToUserResponse(User u) {
+//        return new UserResponse(
+//                u.getId(),
+//                u.getName(),
+//                u.getEmail(),
+//                u.getRole(),
+//                u.getStatus(),
+//                u.getCity()
+////               u.getCreatedAt(),
+////                u.getUpdatedAt()
+//        );
+//    }
+  private UserResponse mapToUserResponse(User u) {
+    return new UserResponse(
+            u.getId(),
+            u.getName(),
+            u.getEmail(),
+            u.getCity(),
+            u.getRole(),
+            u.getStatus()
+    );
+}
+
+
 }
 

@@ -4,8 +4,10 @@ package com.example.ServiceBooking.admin;
 
 import com.example.ServiceBooking.admin.dto.*;
 import com.example.ServiceBooking.auth.User;
+import com.example.ServiceBooking.auth.dto.UserResponse;
 import com.example.ServiceBooking.servicecatalog.ServiceCategory;
 import com.example.ServiceBooking.servicecatalog.SubService;
+import com.example.ServiceBooking.support.dto.CreateSupportAgentRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -240,5 +242,14 @@ public class AdminManagementController {
             throw e;
         }
     }
+
+    // SUPPORT AGENT ENDPOINT
+    @Operation(summary = "Create support agent - ADMIN")
+    @PostMapping("/support/agents")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse createSupportAgent(@Valid @RequestBody CreateSupportAgentRequest req) {
+        return adminService.createSupportAgent(req);
+    }
+
 }
 

@@ -32,36 +32,54 @@ public class BookingController {
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping
     public void create(@Valid @RequestBody BookingCreateRequest request) {
+        log.trace("Entering create method");
+        log.info("Creating new booking");
         service.createBooking(userId(), request);
+        log.debug("Booking created successfully");
     }
 
     @Operation(summary = "Cancel a booking - CUSTOMER/PROVIDER")
     @PostMapping("/{id}/cancel")
     public void cancel(@PathVariable Long id) {
+        log.trace("Entering cancel method");
+        log.info("Cancelling booking");
         service.cancelBooking(id, userId());
+        log.debug("Booking cancelled successfully");
     }
 
     @Operation(summary = "Get current bookings - CUSTOMER")
     @PreAuthorize("hasRole('CUSTOMER')")
     @GetMapping("/customer")
     public List<BookingResponse> customerBookings() {
-        return service.customerBookings(userId());
+        log.trace("Entering customerBookings method");
+        log.info("Fetching customer bookings");
+        List<BookingResponse> bookings = service.customerBookings(userId());
+        log.debug("Customer bookings retrieved successfully");
+        return bookings;
     }
 
     @Operation(summary = "Get current bookings - PROVIDER")
     @PreAuthorize("hasRole('PROVIDER')")
     @GetMapping("/provider")
     public List<BookingResponse> providerBookings() {
-        return service.providerBookings(userId());
+        log.trace("Entering providerBookings method");
+        log.info("Fetching provider bookings");
+        List<BookingResponse> bookings = service.providerBookings(userId());
+        log.debug("Provider bookings retrieved successfully");
+        return bookings;
     }
 
     @Operation(summary = "Get booking history - CUSTOMER/PROVIDER")
     @GetMapping("/history")
     public List<BookingResponse> history() {
+        log.trace("Entering history method");
+        log.info("Fetching booking history");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isCustomer = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
-        return service.history(userId(), isCustomer);
+        List<BookingResponse> history = service.history(userId(), isCustomer);
+        log.debug("Booking history retrieved successfully");
+        return history;
     }
 
     // =========================
@@ -72,14 +90,22 @@ public class BookingController {
     public List<SlotResponse> slots(@RequestParam Long serviceId,
                                     @RequestParam LocalDate date,
                                     @RequestParam String city) {
-        return service.getSlotsForService(serviceId, date, city);
+        log.trace("Entering slots method");
+        log.info("Fetching available slots");
+        List<SlotResponse> slots = service.getSlotsForService(serviceId, date, city);
+        log.debug("Slots retrieved successfully");
+        return slots;
     }
 
     @Operation(summary = "Book a slot - CUSTOMER")
     @PostMapping("/slot")
     @PreAuthorize("hasRole('CUSTOMER')")
     public BookingResponse bookSlot(@RequestBody @Valid SlotBookingRequest req) {
-        return service.bookSlot(userId(), req);
+        log.trace("Entering bookSlot method");
+        log.info("Booking slot");
+        BookingResponse response = service.bookSlot(userId(), req);
+        log.debug("Slot booked successfully");
+        return response;
     }
 
     // ======================================================
@@ -91,14 +117,20 @@ public class BookingController {
     @PreAuthorize("hasRole('PROVIDER')")
     public void verifyStartOtp(@PathVariable Long id,
                                @RequestBody @Valid BookingStartOtpVerifyRequest req) {
+        log.trace("Entering verifyStartOtp method");
+        log.info("Verifying start OTP");
         service.verifyStartOtp(id, userId(), req.otp());
+        log.debug("Start OTP verified successfully");
     }
 
     @Operation(summary = "Resend Start OTP - CUSTOMER")
     @PostMapping("/{id}/start/resend-otp")
     @PreAuthorize("hasRole('CUSTOMER')")
     public void resendStartOtp(@PathVariable Long id) {
+        log.trace("Entering resendStartOtp method");
+        log.info("Resending start OTP");
         service.resendStartOtp(id, userId());
+        log.debug("Start OTP resent successfully");
     }
 
     // ======================================================
@@ -111,6 +143,10 @@ public class BookingController {
     public List<NearbyProviderResponse> nearbyProviders(
             @RequestParam(required = false) Long serviceId
     ) {
-        return service.getNearbyProviders(userId(), serviceId);
+        log.trace("Entering nearbyProviders method");
+        log.info("Fetching nearby providers");
+        List<NearbyProviderResponse> providers = service.getNearbyProviders(userId(), serviceId);
+        log.debug("Nearby providers retrieved successfully");
+        return providers;
     }
 }
