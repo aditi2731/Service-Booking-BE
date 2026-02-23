@@ -1,0 +1,1252 @@
+{
+	"info": {
+		"_postman_id": "servicebooking-api-collection",
+		"name": "ServiceBooking API Collection",
+		"description": "Complete API collection for ServiceBooking platform. Set the {{BASE_URL}} and {{TOKEN}} variables before running.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "TOKEN",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Auth",
+			"item": [
+				{
+					"name": "1.1 Register Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"city\": \"Mumbai\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/customer/register", "host": ["{{BASE_URL}}"], "path": ["auth", "customer", "register"] }
+					}
+				},
+				{
+					"name": "1.2 Register Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jane Provider\",\n  \"email\": \"jane@example.com\",\n  \"city\": \"Delhi\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/provider/register", "host": ["{{BASE_URL}}"], "path": ["auth", "provider", "register"] }
+					}
+				},
+				{
+					"name": "1.3 Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/send-otp", "host": ["{{BASE_URL}}"], "path": ["auth", "send-otp"] }
+					}
+				},
+				{
+					"name": "1.4 Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/verify-otp", "host": ["{{BASE_URL}}"], "path": ["auth", "verify-otp"] }
+					}
+				},
+				{
+					"name": "1.5 Set Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass@123\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/set-password", "host": ["{{BASE_URL}}"], "path": ["auth", "set-password"] }
+					}
+				},
+				{
+					"name": "1.6 Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('TOKEN', jsonData.token);",
+									"    console.log('Token saved automatically!');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass@123\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/auth/login", "host": ["{{BASE_URL}}"], "path": ["auth", "login"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "2. User Management",
+			"item": [
+				{
+					"name": "2.1 Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/users/me", "host": ["{{BASE_URL}}"], "path": ["users", "me"] }
+					}
+				},
+				{
+					"name": "2.2 Update My Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Updated\",\n  \"city\": \"Pune\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/users/me", "host": ["{{BASE_URL}}"], "path": ["users", "me"] }
+					}
+				},
+				{
+					"name": "2.3 Get User by ID (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/users/1", "host": ["{{BASE_URL}}"], "path": ["users", "1"] }
+					}
+				},
+				{
+					"name": "2.4 Delete My Account",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/users/me", "host": ["{{BASE_URL}}"], "path": ["users", "me"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Service Catalog",
+			"item": [
+				{
+					"name": "3.1 List All Categories (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{BASE_URL}}/catalog/categories", "host": ["{{BASE_URL}}"], "path": ["catalog", "categories"] }
+					}
+				},
+				{
+					"name": "3.2 Create Category (ADMIN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Home Cleaning\",\n  \"description\": \"All types of home cleaning services\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/catalog/categories", "host": ["{{BASE_URL}}"], "path": ["catalog", "categories"] }
+					}
+				},
+				{
+					"name": "3.3 Update Category (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Home Cleaning Updated\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/catalog/categories/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "categories", "1"] }
+					}
+				},
+				{
+					"name": "3.4 Delete Category (ADMIN)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/catalog/categories/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "categories", "1"] }
+					}
+				},
+				{
+					"name": "3.5 Get Sub-Services by Category (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{BASE_URL}}/catalog/services/category/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "services", "category", "1"] }
+					}
+				},
+				{
+					"name": "3.6 Add Sub-Service (ADMIN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Deep Cleaning\",\n  \"description\": \"Full deep cleaning of home\",\n  \"basePrice\": 1500.00\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/catalog/services/category/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "services", "category", "1"] }
+					}
+				},
+				{
+					"name": "3.7 Update Sub-Service (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Deep Cleaning Premium\",\n  \"description\": \"Premium deep cleaning service\",\n  \"basePrice\": 2000.00\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/catalog/services/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "services", "1"] }
+					}
+				},
+				{
+					"name": "3.8 Delete Sub-Service (ADMIN)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/catalog/services/1", "host": ["{{BASE_URL}}"], "path": ["catalog", "services", "1"] }
+					}
+				},
+				{
+					"name": "3.9 Search Sub-Services (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/catalog/services/search?q=cleaning",
+							"host": ["{{BASE_URL}}"],
+							"path": ["catalog", "services", "search"],
+							"query": [
+								{ "key": "q", "value": "cleaning" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Provider Management",
+			"item": [
+				{
+					"name": "4.1 Provider Setup (PROVIDER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subServiceIds\": [1, 2, 3],\n  \"city\": \"Mumbai\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/api/provider/setup", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "setup"] }
+					}
+				},
+				{
+					"name": "4.2 Upload Documents (PROVIDER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentType\": \"AADHAAR\",\n  \"documentUrl\": \"https://storage.example.com/docs/aadhaar_123.pdf\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/api/provider/documents", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "documents"] }
+					}
+				},
+				{
+					"name": "4.3 Toggle Online/Offline (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"online\": true\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/api/provider/availability", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "availability"] }
+					}
+				},
+				{
+					"name": "4.4 Set Availability Window (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fromDate\": \"2026-03-01\",\n  \"toDate\": \"2026-03-07\",\n  \"startTime\": \"09:00:00\",\n  \"endTime\": \"18:00:00\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/api/provider/availability/window", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "availability", "window"] }
+					}
+				},
+				{
+					"name": "4.5 Get Earnings (PROVIDER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/api/provider/earnings", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "earnings"] }
+					}
+				},
+				{
+					"name": "4.6 View Available Jobs (PROVIDER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/api/provider/jobs", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "jobs"] }
+					}
+				},
+				{
+					"name": "4.7 Accept Job (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/api/provider/jobs/1/accept", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "jobs", "1", "accept"] }
+					}
+				},
+				{
+					"name": "4.8 Reject Job (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/api/provider/jobs/1/reject", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "jobs", "1", "reject"] }
+					}
+				},
+				{
+					"name": "4.9 Update Job Status (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/provider/jobs/1/status?status=COMPLETED",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "provider", "jobs", "1", "status"],
+							"query": [
+								{ "key": "status", "value": "COMPLETED" }
+							]
+						}
+					}
+				},
+				{
+					"name": "4.10 Approve Provider (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/api/provider/1/approve", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "1", "approve"] }
+					}
+				},
+				{
+					"name": "4.11 Reject Provider (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\"Documents are incomplete, please re-upload\""
+						},
+						"url": { "raw": "{{BASE_URL}}/api/provider/1/reject", "host": ["{{BASE_URL}}"], "path": ["api", "provider", "1", "reject"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Bookings",
+			"item": [
+				{
+					"name": "5.1 Create Booking (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": 1,\n  \"dateTime\": \"2026-03-15T10:00:00\",\n  \"location\": \"123 Main Street, Mumbai\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/bookings", "host": ["{{BASE_URL}}"], "path": ["bookings"] }
+					}
+				},
+				{
+					"name": "5.2 Get Available Slots (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/bookings/slots?serviceId=1&date=2026-03-15&city=Mumbai",
+							"host": ["{{BASE_URL}}"],
+							"path": ["bookings", "slots"],
+							"query": [
+								{ "key": "serviceId", "value": "1" },
+								{ "key": "date", "value": "2026-03-15" },
+								{ "key": "city", "value": "Mumbai" }
+							]
+						}
+					}
+				},
+				{
+					"name": "5.3 Book Slot - With Provider (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": 1,\n  \"providerId\": 2,\n  \"dateTime\": \"2026-03-15T10:00:00\",\n  \"location\": \"123 Main Street, Mumbai\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/bookings/slot", "host": ["{{BASE_URL}}"], "path": ["bookings", "slot"] }
+					}
+				},
+				{
+					"name": "5.4 Book Slot - Auto Assign (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": 1,\n  \"dateTime\": \"2026-03-15T10:00:00\",\n  \"location\": \"123 Main Street, Mumbai\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/bookings/slot", "host": ["{{BASE_URL}}"], "path": ["bookings", "slot"] }
+					}
+				},
+				{
+					"name": "5.5 Get My Bookings - Customer (CUSTOMER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/bookings/customer", "host": ["{{BASE_URL}}"], "path": ["bookings", "customer"] }
+					}
+				},
+				{
+					"name": "5.6 Get My Bookings - Provider (PROVIDER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/bookings/provider", "host": ["{{BASE_URL}}"], "path": ["bookings", "provider"] }
+					}
+				},
+				{
+					"name": "5.7 Get Booking History (CUSTOMER/PROVIDER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/bookings/history", "host": ["{{BASE_URL}}"], "path": ["bookings", "history"] }
+					}
+				},
+				{
+					"name": "5.8 Cancel Booking (CUSTOMER/PROVIDER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/bookings/1/cancel", "host": ["{{BASE_URL}}"], "path": ["bookings", "1", "cancel"] }
+					}
+				},
+				{
+					"name": "5.9 Verify Job Start OTP (PROVIDER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"otp\": \"1234\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/bookings/1/start/verify-otp", "host": ["{{BASE_URL}}"], "path": ["bookings", "1", "start", "verify-otp"] }
+					}
+				},
+				{
+					"name": "5.10 Resend Job Start OTP (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/bookings/1/start/resend-otp", "host": ["{{BASE_URL}}"], "path": ["bookings", "1", "start", "resend-otp"] }
+					}
+				},
+				{
+					"name": "5.11 Get Nearby Providers (CUSTOMER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/bookings/providers/nearby?serviceId=1",
+							"host": ["{{BASE_URL}}"],
+							"path": ["bookings", "providers", "nearby"],
+							"query": [
+								{ "key": "serviceId", "value": "1" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Booking Filters",
+			"item": [
+				{
+					"name": "6.1 Filter Bookings - POST",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerName\": \"\",\n  \"providerName\": \"\",\n  \"serviceCategory\": \"\",\n  \"status\": \"COMPLETED\",\n  \"fromDate\": \"2026-01-01\",\n  \"toDate\": \"2026-03-31\",\n  \"sortBy\": \"bookingDate\",\n  \"sortOrder\": \"DESC\",\n  \"city\": \"Mumbai\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/bookings/filter?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "bookings", "filter"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "6.2 Filter Bookings - GET Default",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/bookings/filter?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "bookings", "filter"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Payments",
+			"item": [
+				{
+					"name": "7.1 Record Cash Payment (PROVIDER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": 1,\n  \"amount\": 1500.00\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/payments/cash", "host": ["{{BASE_URL}}"], "path": ["payments", "cash"] }
+					}
+				},
+				{
+					"name": "7.2 Mark Payment as Paid (PROVIDER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/payments/1/paid", "host": ["{{BASE_URL}}"], "path": ["payments", "1", "paid"] }
+					}
+				},
+				{
+					"name": "7.3 Payment History (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/payments/history?page=0&size=20&sort=paymentId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["payments", "history"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "paymentId" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Notifications",
+			"item": [
+				{
+					"name": "8.1 Get My Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["notifications"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				},
+				{
+					"name": "8.2 Mark Notification as Read",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/notifications/1/read", "host": ["{{BASE_URL}}"], "path": ["notifications", "1", "read"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Ratings & Reviews",
+			"item": [
+				{
+					"name": "9.1 Submit Rating (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": 1,\n  \"stars\": 5\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/ratings/submit-rating", "host": ["{{BASE_URL}}"], "path": ["ratings", "submit-rating"] }
+					}
+				},
+				{
+					"name": "9.2 Submit Review (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": 1,\n  \"comment\": \"Excellent service! The provider was very professional and thorough with the cleaning.\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/ratings/submit-review", "host": ["{{BASE_URL}}"], "path": ["ratings", "submit-review"] }
+					}
+				},
+				{
+					"name": "9.3 Get Provider Ratings (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/ratings/provider/1?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["ratings", "provider", "1"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				},
+				{
+					"name": "9.4 Get Provider Rating Summary (ADMIN/PROVIDER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/ratings/provider/1/summary", "host": ["{{BASE_URL}}"], "path": ["ratings", "provider", "1", "summary"] }
+					}
+				},
+				{
+					"name": "9.5 Get Service Reviews (PUBLIC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/ratings/service/1?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["ratings", "service", "1"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Customer Profile",
+			"item": [
+				{
+					"name": "10.1 Get My Profile (CUSTOMER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/customer/profile", "host": ["{{BASE_URL}}"], "path": ["customer", "profile"] }
+					}
+				},
+				{
+					"name": "10.2 Update My Profile (CUSTOMER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe Updated\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/customer/profile", "host": ["{{BASE_URL}}"], "path": ["customer", "profile"] }
+					}
+				},
+				{
+					"name": "10.3 Add Address (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addressLine\": \"456 Park Avenue, Andheri West\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400058\",\n  \"isDefault\": true\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/customer/address", "host": ["{{BASE_URL}}"], "path": ["customer", "address"] }
+					}
+				},
+				{
+					"name": "10.4 Update Address (CUSTOMER)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addressLine\": \"789 New Road, Bandra\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400050\",\n  \"isDefault\": false\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/customer/address/1", "host": ["{{BASE_URL}}"], "path": ["customer", "address", "1"] }
+					}
+				},
+				{
+					"name": "10.5 Delete Address (CUSTOMER)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/customer/address/1", "host": ["{{BASE_URL}}"], "path": ["customer", "address", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Admin Management",
+			"item": [
+				{
+					"name": "11.1 Dashboard Metrics (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/admin/dashboard", "host": ["{{BASE_URL}}"], "path": ["admin", "dashboard"] }
+					}
+				},
+				{
+					"name": "11.2 Dashboard Metrics - City Filter (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/dashboard?city=Mumbai",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "dashboard"],
+							"query": [
+								{ "key": "city", "value": "Mumbai" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.3 List Customers (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/customers?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "customers"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.4 Suspend User (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"suspended\": true\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/admin/users/1/suspend", "host": ["{{BASE_URL}}"], "path": ["admin", "users", "1", "suspend"] }
+					}
+				},
+				{
+					"name": "11.5 Unsuspend User (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"suspended\": false\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/admin/users/1/suspend", "host": ["{{BASE_URL}}"], "path": ["admin", "users", "1", "suspend"] }
+					}
+				},
+				{
+					"name": "11.6 Approve Provider (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/providers/1/approve?approved=true",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "providers", "1", "approve"],
+							"query": [
+								{ "key": "approved", "value": "true" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.7 Reject Provider (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/providers/1/approve?approved=false",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "providers", "1", "approve"],
+							"query": [
+								{ "key": "approved", "value": "false" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.8 Update Sub-Service Price (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 2500.00\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/admin/subservices/1/price", "host": ["{{BASE_URL}}"], "path": ["admin", "subservices", "1", "price"] }
+					}
+				},
+				{
+					"name": "11.9 View All Bookings (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/bookings?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "bookings"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.10 Manual Provider Assignment (ADMIN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"providerId\": 2\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/admin/bookings/1/assign", "host": ["{{BASE_URL}}"], "path": ["admin", "bookings", "1", "assign"] }
+					}
+				},
+				{
+					"name": "11.11 Booking Report (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/reports/bookings?from=2026-01-01T00:00:00&to=2026-03-31T23:59:59",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "reports", "bookings"],
+							"query": [
+								{ "key": "from", "value": "2026-01-01T00:00:00" },
+								{ "key": "to", "value": "2026-03-31T23:59:59" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.12 Provider Performance Report (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/reports/providers?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "reports", "providers"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "11.13 Create Support Agent (ADMIN)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Support Agent 1\",\n  \"email\": \"support1@example.com\",\n  \"role\": \"SUPPORT_L1\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/admin/support/agents", "host": ["{{BASE_URL}}"], "path": ["admin", "support", "agents"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Support Tickets",
+			"item": [
+				{
+					"name": "12.1 Create Ticket - Service Issue (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": 1,\n  \"providerId\": 2,\n  \"ticketType\": \"SERVICE_ISSUE\",\n  \"priority\": \"HIGH\",\n  \"subject\": \"Provider did not show up\",\n  \"description\": \"I booked a cleaning service for 10 AM but the provider never arrived. I waited for over an hour.\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/support/tickets", "host": ["{{BASE_URL}}"], "path": ["support", "tickets"] }
+					}
+				},
+				{
+					"name": "12.2 Create Ticket - Refund Request (CUSTOMER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": 1,\n  \"ticketType\": \"REFUND_REQUEST\",\n  \"priority\": \"MEDIUM\",\n  \"subject\": \"Request refund for incomplete service\",\n  \"description\": \"The service was only partially completed. Requesting a full refund.\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/support/tickets", "host": ["{{BASE_URL}}"], "path": ["support", "tickets"] }
+					}
+				},
+				{
+					"name": "12.3 Get My Tickets (CUSTOMER)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/support/tickets/my?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["support", "tickets", "my"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				},
+				{
+					"name": "12.4 Get Assigned Tickets (SUPPORT AGENT)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/support/tickets/assigned?page=0&size=20&sort=createdAt",
+							"host": ["{{BASE_URL}}"],
+							"path": ["support", "tickets", "assigned"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" },
+								{ "key": "sort", "value": "createdAt" }
+							]
+						}
+					}
+				},
+				{
+					"name": "12.5 Update Ticket - In Progress (SUPPORT AGENT)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/support/tickets/1", "host": ["{{BASE_URL}}"], "path": ["support", "tickets", "1"] }
+					}
+				},
+				{
+					"name": "12.6 Update Ticket - Resolve (SUPPORT AGENT)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"RESOLVED\",\n  \"resolutionNote\": \"Refund of Rs. 1500 has been processed. Provider has been warned.\"\n}"
+						},
+						"url": { "raw": "{{BASE_URL}}/support/tickets/1", "host": ["{{BASE_URL}}"], "path": ["support", "tickets", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Analytics",
+			"item": [
+				{
+					"name": "13.1 Monthly Booking Report (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/analytics/bookings/monthly?year=2026&month=2",
+							"host": ["{{BASE_URL}}"],
+							"path": ["analytics", "bookings", "monthly"],
+							"query": [
+								{ "key": "year", "value": "2026" },
+								{ "key": "month", "value": "2" }
+							]
+						}
+					}
+				},
+				{
+					"name": "13.2 Revenue Summary (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": { "raw": "{{BASE_URL}}/analytics/revenue", "host": ["{{BASE_URL}}"], "path": ["analytics", "revenue"] }
+					}
+				},
+				{
+					"name": "13.3 Provider Activity (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/analytics/providers?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["analytics", "providers"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "13.4 Customer Usage Trends (ADMIN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/analytics/customers?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["analytics", "customers"],
+							"query": [
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "20" }
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
