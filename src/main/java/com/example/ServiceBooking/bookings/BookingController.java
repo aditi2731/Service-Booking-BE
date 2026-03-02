@@ -38,6 +38,18 @@ public class BookingController {
         log.debug("Booking created successfully");
     }
 
+    @Operation(summary = "Reschedule a booking to a new date/time - CUSTOMER")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PutMapping("/{id}/reschedule")
+    public BookingResponse reschedule(@PathVariable Long id,
+                                      @Valid @RequestBody RescheduleRequest req) {
+        log.trace("Entering reschedule method");
+        log.info("Rescheduling booking {}", id);
+        BookingResponse response = service.rescheduleBooking(id, userId(), req);
+        log.debug("Booking rescheduled successfully");
+        return response;
+    }
+
     @Operation(summary = "Cancel a booking - CUSTOMER/PROVIDER")
     @PostMapping("/{id}/cancel")
     public void cancel(@PathVariable Long id) {

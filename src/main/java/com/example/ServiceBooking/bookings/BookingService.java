@@ -277,6 +277,113 @@ public class BookingService {
     }
 
     // =========================
+    // RESCHEDULE BOOKING
+    // =========================
+
+    /**
+     * CUSTOMER: Reschedule an ACCEPTED booking to a new date/time.
+     * <p>
+     * Steps:
+     * 1. Validate ownership and status (must be ACCEPTED, not yet STARTED)
+     * 2. Lock the new slot (PESSIMISTIC_WRITE) — must be AVAILABLE
+     * 3. Check no other booking overlaps the new time for the same provider
+     * 4. Release the old slot → AVAILABLE
+     * 5. Mark new slot → BOOKED
+     * 6. Update booking dateTime (and optional location)
+     * 7. Regenerate OTP — old OTP is invalidated, new one sent to customer
+     * 8. Notify provider about the reschedule
+     */
+    @Transactional
+    public BookingResponse rescheduleBooking(Long bookingId, Long customerId, RescheduleRequest req) {
+        log.trace("Entering rescheduleBooking method");
+        log.info("Rescheduling booking {}", bookingId);
+
+        Booking booking = getBooking(bookingId);
+
+        // Authorization — only booking owner can reschedule
+        if (!customerId.equals(booking.getCustomerId())) {
+            log.error("Unauthorized reschedule attempt on booking {}", bookingId);
+            throw new RuntimeException("Unauthorized: only the customer can reschedule this booking");
+        }
+
+        // Status guard — can only reschedule ACCEPTED (provider assigned, OTP not yet verified)
+        if (booking.getStatus() != BookingStatus.ACCEPTED) {
+            log.error("Booking {} is in status {} and cannot be rescheduled", bookingId, booking.getStatus());
+            throw new RuntimeException(
+                    "Only ACCEPTED bookings can be rescheduled. Current status: " + booking.getStatus());
+        }
+
+        if (booking.getProviderId() == null) {
+            log.error("Booking {} has no provider assigned", bookingId);
+            throw new RuntimeException("Cannot reschedule: no provider assigned to this booking");
+        }
+
+        LocalDate newDate  = req.newDateTime().toLocalDate();
+        LocalTime newStart = req.newDateTime().toLocalTime();
+        LocalTime newEnd   = newStart.plusHours(1);
+
+        LocalDate oldDate  = booking.getDateTime().toLocalDate();
+        LocalTime oldStart = booking.getDateTime().toLocalTime();
+        LocalTime oldEnd   = oldStart.plusHours(1);
+
+        // STEP 1: Lock the new slot with PESSIMISTIC_WRITE — must be AVAILABLE
+        ProviderAvailability newSlot = availabilityRepo
+                .lockAvailableSlot(booking.getProviderId(), newDate, newStart, newEnd)
+                .orElseThrow(() -> {
+                    log.error("New slot {}/{}-{} not available for provider {}",
+                            newDate, newStart, newEnd, booking.getProviderId());
+                    return new RuntimeException("Requested slot is not available for the provider");
+                });
+
+        // STEP 2: Overlap check — exclude the current booking (it still holds the OLD slot)
+        boolean overlap = repo.existsByProviderIdAndDateTimeBetweenAndStatusInAndIdNot(
+                booking.getProviderId(),
+                req.newDateTime(),
+                req.newDateTime().plusMinutes(59),
+                List.of(BookingStatus.ACCEPTED, BookingStatus.STARTED),
+                bookingId
+        );
+        if (overlap) {
+            log.error("Provider {} already has a booking at the new requested time", booking.getProviderId());
+            throw new RuntimeException("Provider already has another booking at the requested time");
+        }
+
+        // STEP 3: Release old slot → AVAILABLE
+        availabilityRepo.lockSlot(booking.getProviderId(), oldDate, oldStart, oldEnd)
+                .ifPresent(oldSlot -> {
+                    if (oldSlot.getStatus() == AvailabilityStatus.BOOKED) {
+                        oldSlot.setStatus(AvailabilityStatus.AVAILABLE);
+                        availabilityRepo.save(oldSlot);
+                    }
+                });
+
+        // STEP 4: Mark new slot as BOOKED
+        newSlot.setStatus(AvailabilityStatus.BOOKED);
+        availabilityRepo.save(newSlot);
+
+        // STEP 5: Update booking fields; clear OTP verification state (job hasn't started yet)
+        booking.setDateTime(req.newDateTime());
+        if (req.location() != null && !req.location().isBlank()) {
+            booking.setLocation(req.location());
+        }
+        booking.setStartOtpVerifiedAt(null); // reset in case someone resent OTP earlier
+
+        // STEP 6: Regenerate OTP — old OTP becomes invalid, new one saved + sent to customer
+        generateAndNotifyStartOtp(booking); // also calls repo.save(booking) internally
+
+        // STEP 7: Notify provider
+        notificationService.upsertBookingNotification(
+                booking.getProviderId(),
+                booking.getId(),
+                "Booking #" + booking.getId() + " has been rescheduled to " + req.newDateTime()
+                        + ". Ask customer for the new OTP to start the job."
+        );
+
+        log.debug("Booking {} rescheduled successfully to {}", bookingId, req.newDateTime());
+        return map(booking);
+    }
+
+    // =========================
     // SLOTS FEATURE
     // =========================
     public List<SlotResponse> getSlotsForService(Long serviceId, LocalDate date, String city) {

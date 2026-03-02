@@ -102,6 +102,11 @@ group by b.customerId
 
     boolean existsByProviderIdAndDateTimeBetweenAndStatusIn(Long providerId, @NotNull LocalDateTime localDateTime, LocalDateTime localDateTime1, List<BookingStatus> accepted);
 
+    // Same overlap check but excludes a specific booking id (used during reschedule to ignore self)
+    boolean existsByProviderIdAndDateTimeBetweenAndStatusInAndIdNot(
+            Long providerId, LocalDateTime from, LocalDateTime to, List<BookingStatus> statuses, Long excludeId
+    );
+
 
     public interface ProviderActivityProjection {
         Long getProviderId();

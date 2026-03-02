@@ -28,7 +28,6 @@ public class NotificationController {
 
     @Operation(summary = "Fetch logged-in user notifications")
     @GetMapping
-
     @PreAuthorize("isAuthenticated()")
     public Page<NotificationResponse> myNotifications(
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
@@ -64,12 +63,4 @@ public class NotificationController {
         }
     }
 
-//    // Optional admin endpoint (manual testing)
-//    @Operation(summary = "Create notification (ADMIN)")
-//    @PostMapping("/create")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public void create(@RequestParam Long userId, @RequestParam String message) {
-//        log.info("Admin create notification request received");
-//        service.createNotification(userId, message);
-//    }
 }
